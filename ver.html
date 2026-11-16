@@ -22,6 +22,14 @@
   .tag { display: inline-block; background: #9cc7ad; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .tag.palco { background: #ffd33d; }
   .small { font-size: 13px; color: #7fae92; text-align: center; margin: 6px 0; }
+  .rank-1 { border-color: #0f5c33; background: linear-gradient(90deg, #030f08, #030a06); padding: 16px 14px; }
+  .rank-1 .pos { font-size: 36px; color: #ffd33d; }
+  .rank-1 .nome { font-size: 30px; }
+  .rank-1 .score { font-size: 60px; line-height: 1; }
+  .rank-low { border-color: #ff4d4d; background: linear-gradient(90deg, #3a1313, #030a06); padding: 16px 14px; }
+  .rank-low .pos, .rank-low .score { color: #ffd33d; }
+  .rank-low .nome { font-size: 30px; }
+  .rank-low .score { font-size: 60px; line-height: 1; }
 </style>
 </head>
 <body>
@@ -87,14 +95,29 @@ function desenhar(db) {
     </div>`;
   }).join('') : '<p class="small">Fila vazia</p>';
 
+  // Ranking: 1º lugar no topo, menor nota logo abaixo, depois os demais
   const rank = ordenarRanking(db);
-  document.getElementById('ranking').innerHTML = rank.length ? rank.map((p, i) => `<div class="card">
-      <div class="row">
-        <div class="pos">${i + 1}º</div>
-        <div class="nome" style="flex:1">${esc(nomeDe(db, p.clientId))}</div>
-        <div class="score">${esc(p.score)}</div>
-      </div>
-    </div>`).join('') : '<p class="small">Ninguém cantou ainda</p>';
+  if (!rank.length) {
+    document.getElementById('ranking').innerHTML = '<p class="small">Ninguém cantou ainda</p>';
+  } else {
+    const ultimo = rank.length - 1;
+    let ordem = rank.map((_, i) => i);
+    if (rank.length > 2) ordem = [0, ultimo, ...ordem.filter(i => i !== 0 && i !== ultimo)];
+    const menorNota = Math.min(...rank.map(p => p.score));
+    document.getElementById('ranking').innerHTML = ordem.map(i => {
+      const p = rank[i];
+      const ehUltimo = rank.length > 1 && i === ultimo && p.score === menorNota;
+      const cls = ehUltimo ? 'rank-low' : (i === 0 ? 'rank-1' : '');
+      const pos = ehUltimo ? '' : (i === 0 ? '🥇' : (i + 1) + 'º');
+      return `<div class="card ${cls}">
+        <div class="row">
+          <div class="pos">${pos}</div>
+          <div class="nome" style="flex:1">${esc(nomeDe(db, p.clientId))}</div>
+          <div class="score">${esc(p.score)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
 }
 
 onSnapshot(DOC, snap => {
