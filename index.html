@@ -236,15 +236,24 @@
   </div>
   <div id="toast" class="toast hidden"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+
 const PIN = '523';
 const KEY = 'karaoke-fila-v1';
 
-// Supabase (banco online)
-const SB_URL = 'https://dimhxzodbxygrbaeskyu.supabase.co';
-const SB_KEY = 'sb_publishable_GyI3eRnzxCUzHrV3eGys0Q_QJ53zzhX';
-const ROW = SB_URL + '/rest/v1/karaoke?id=eq.1';
-const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+// Firebase (banco online: Firestore)
+const firebaseApp = initializeApp({
+  apiKey: 'AIzaSyD13Y66-paZkQsmlXRm3QAhJfs-x_UFJRU',
+  authDomain: 'jangoke-karaoke.firebaseapp.com',
+  projectId: 'jangoke-karaoke',
+  storageBucket: 'jangoke-karaoke.firebasestorage.app',
+  messagingSenderId: '775660173991',
+  appId: '1:775660173991:web:a8880579c121a82a4ab982'
+});
+const fdb = getFirestore(firebaseApp);
+const DOC = doc(fdb, 'karaoke', 'main');
 
 function normalize(d) {
   d = d || {};
@@ -325,14 +334,13 @@ function save() {
   pendingSync = true;
   localStorage.setItem('karaoke-pending', '1');
   setStatus('Salvando...');
-  fetch(ROW, { method: 'PATCH', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify({ dados: db }) })
-    .then(r => {
+  setDoc(DOC, { dados: db })
+    .then(() => {
       pendingSync = false;
       localStorage.removeItem('karaoke-pending');
-      if (!r.ok) { setStatus('Erro ' + r.status + ' ao salvar na nuvem'); return; }
       setStatus('Salvo na nuvem');
     })
-    .catch(err => setStatus('Não enviou para a nuvem (' + (err && err.name || 'erro') + ': ' + (err && err.message || '') + '). Salvo neste aparelho, tentando de novo.'));
+    .catch(err => setStatus('Não enviou para a nuvem (' + (err && err.code || 'erro') + ': ' + (err && err.message || '') + '). Salvo neste aparelho, tentando de novo.'));
 }
 // Reenvia o que ficou pendente (ex.: Wi-Fi caiu)
 function flushPending() { if (pendingSync) save(); }
@@ -341,10 +349,8 @@ window.addEventListener('online', flushPending);
 // CARREGAR da nuvem
 async function loadRemote() {
   try {
-    const r = await fetch(ROW + '&select=dados', { headers: SB_HEADERS });
-    if (!r.ok) throw new Error(r.status);
-    const rows = await r.json();
-    const remote = normalize(rows.length ? rows[0].dados : null);
+    const snap = await getDoc(DOC);
+    const remote = normalize(snap.exists() ? snap.data().dados : null);
     if (pendingSync || (isEmpty(remote) && !isEmpty(db))) {
       // Tem alteração pendente deste aparelho, ou nuvem vazia com dados aqui: sobe os dados daqui
       save();
@@ -586,11 +592,9 @@ async function refreshRemote() {
   if (pendingSync) { save(); return; }
   if (busy()) return;
   try {
-    const r = await fetch(ROW + '&select=dados', { headers: SB_HEADERS, cache: 'no-store' });
-    if (!r.ok) return;
-    const rows = await r.json();
-    if (!rows.length) return;
-    const remote = normalize(rows[0].dados);
+    const snap = await getDoc(DOC);
+    if (!snap.exists()) return;
+    const remote = normalize(snap.data().dados);
     if (JSON.stringify(remote) === JSON.stringify(db) || busy()) return;
     db = remote;
     localStorage.setItem(KEY, JSON.stringify(db));
