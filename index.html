@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#010503">
+<meta property="og:url" content="https://jangoke.netlify.app/">
+<meta property="og:title" content="JANGOKÊ">
+<meta property="og:description" content="Fila e ranking do karaokê">
+<meta property="og:image" content="https://jangoke.netlify.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<title>JANGOKÊ</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: #010503; color: #e6f7ec; font-family: system-ui, -apple-system, sans-serif; -webkit-text-size-adjust: 100%; }
+  body { padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow-x: hidden; }
+
+  h1 { color: #0f5c33; font-size: 24px; margin: 0 0 6px; }
+  h2 { font-size: 18px; color: #e6f7ec; border-bottom: 1px solid #0a1d13; padding-bottom: 6px; margin: 26px 0 12px; }
+
+  /* 16px nos campos evita o zoom automático no iPhone */
+  input, textarea { width: 100%; font-size: 16px; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid #12301f; background: #04100a; color: #e6f7ec; outline: none; font-family: inherit; }
+  textarea { min-height: 180px; resize: vertical; }
+  input:focus, textarea:focus { border-color: #0f5c33; }
+  button { font-size: 16px; font-weight: bold; min-height: 48px; padding: 10px 16px; border-radius: 10px; border: none; background: #0f5c33; color: #111; cursor: pointer; width: 100%; }
+  button:active { opacity: 0.8; }
+  button.sec { background: #0a1d13; color: #e6f7ec; }
+  button.mini { width: auto; min-height: 36px; font-size: 14px; padding: 6px 12px; margin-top: 8px; background: #0a1d13; color: #0f5c33; }
+
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .card { background: #030a06; border: 1px solid #0a1d13; border-radius: 12px; padding: 14px; }
+  .item { cursor: pointer; }
+  .item:active { border-color: #0f5c33; }
+  .item-title { font-size: 17px; font-weight: bold; word-break: break-word; }
+  .small { font-size: 13px; color: #9cc7ad; line-height: 1.4; }
+  .err { color: #ff6b6b; font-size: 14px; margin: 6px 0 0; }
+  .hidden { display: none !important; }
+  .add-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .queue-code { font-size: 30px; font-weight: bold; color: #0f5c33; letter-spacing: 1px; }
+  #status { font-size: 12px; color: #7fae92; margin: 0 0 10px; }
+
+  /* Ranking */
+  .rank-card { display: flex; align-items: center; gap: 12px; background: #030a06; border: 2px solid #0a1d13; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .rank-pos { font-size: 26px; font-weight: bold; min-width: 44px; text-align: center; color: #9cc7ad; flex-shrink: 0; }
+  .rank-info { flex: 1; min-width: 0; font-size: 32px; word-break: break-word; }
+  .rank-score { font-size: 24px; font-weight: bold; color: #0f5c33; flex-shrink: 0; }
+  .rank-sub { font-size: 12px; color: #9cc7ad; margin-top: 4px; }
+  .rank-card { position: relative; overflow: hidden; }
+  .rank-card > * { position: relative; z-index: 1; }
+  .bg-emoji { position: absolute !important; right: 4px; top: 50%; transform: translateY(-50%); font-size: 64px; opacity: 0.22; z-index: 0 !important; pointer-events: none; }
+  .bg-emoji.bg-cold { left: 50%; right: auto; font-size: 192px; transform: translate(-50%, -50%) rotate(12deg); white-space: nowrap; }
+  .rank-1 { border-color: #0f5c33; background: linear-gradient(90deg, #030f08, #030a06); padding: 16px 14px; }
+  .rank-1 .rank-pos { font-size: 36px; color: #0f5c33; }
+  .rank-1 .rank-info { font-size: 38px; }
+  .rank-1 .rank-score { font-size: 72px; line-height: 1; color: #0f5c33; }
+  .rank-2 { border-color: #c0c0c0; }
+  .rank-2 .rank-pos { color: #c0c0c0; }
+  .rank-3 { border-color: #cd7f32; }
+  .rank-3 .rank-pos { color: #cd7f32; }
+  .rank-low { border-color: #ff4d4d; background: linear-gradient(90deg, #3a1313, #030a06); padding: 16px 14px; }
+  .rank-low .rank-pos { color: #ff4d4d; font-size: 36px; }
+  .rank-low .rank-info { font-size: 38px; }
+  .rank-low .rank-score { color: #ff4d4d; font-size: 72px; line-height: 1; }
+  .rank-low-tag { display: inline-block; background: #ff4d4d; color: #111; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
+
+  /* Tela de nota */
+  #current { border-color: #0f5c33; position: sticky; top: 0; z-index: 5; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+  #score { font-size: 28px; text-align: center; font-weight: bold; }
+
+  /* Caixa de edição */
+  #editBox { border-color: #0f5c33; position: sticky; top: 0; z-index: 6; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+
+  /* Overlay do PIN */
+  #pinBox { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+  #pinBox .card { width: 100%; max-width: 360px; border-color: #0f5c33; }
+  #pinInput { font-size: 24px; text-align: center; letter-spacing: 6px; }
+
+  @media (min-width: 640px) {
+    body { padding: 24px; }
+    .add-row { flex-direction: row; }
+    .add-row input { flex: 1; }
+    .add-row button { width: auto; }
+    .name-row { flex-direction: row; }
+    .name-row input { flex: 1; }
+    .name-row button { width: auto; }
+  }
+  .neon { text-align: center; font-family: "Bebas Neue", Impact, sans-serif; font-weight: normal; font-size: 64px; line-height: 1; letter-spacing: 4px; color: #fff; margin: 0 0 14px; text-shadow: 0 0 4px #fff, 0 0 10px #ff2d95, 0 0 22px #ff2d95, 0 0 38px #ff2d95, 0 0 56px #00f0ff; }
+  #pendingSong { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
+  .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos, .queue-code { color: #ffd33d !important; }
+  .first-up { border-color: #1e8f4e; }
+  .stage-btn { width: 100%; min-height: 56px; font-size: 20px; margin-top: 10px; background: #1e8f4e; color: #fff; }
+  .stage-btn.palco { background: #ffd33d; color: #111; }
+  .score-row { display: flex; gap: 8px; margin-top: 10px; }
+  .score-row input { flex: 1; font-size: 24px; text-align: center; }
+  .save-btn { width: auto; min-height: 56px; background: #ffd33d; color: #111; white-space: nowrap; }
+  .card.open { background: #8fe3ae; border-color: #8fe3ae; }
+  .card.open .client-name { color: #04100a; }
+  #stagePanel { position: sticky; top: 0; z-index: 4; border-color: #ffd33d; margin: 0 0 12px; }
+  #stagePanel .sp-label { font-size: 12px; color: #ffd33d; letter-spacing: 2px; font-weight: bold; }
+  #stagePanel .sp-name { font-size: 22px; font-weight: bold; margin-top: 4px; word-break: break-word; }
+  #stagePanel .sp-next { font-size: 15px; margin-top: 8px; color: #cfe9d8; }
+  .title-row { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .title-row .neon { margin: 0; }
+  .rank-btn { font-size: 18px; font-weight: bold; padding: 10px 18px; border-radius: 10px; background: #17703d; color: #fff; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
+  .overlay .card { width: 100%; max-width: 360px; border-color: #ffd33d; }
+  .card-foot { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .dots { width: auto; min-height: 40px; padding: 4px 16px; font-size: 22px; line-height: 1; background: #0f2c1d; color: #e6f7ec; }
+  .toast-nota { font-size: 32px; font-weight: bold; line-height: 1.2; }
+  .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: #ffd33d; color: #111; font-weight: bold; padding: 12px 18px; border-radius: 10px; z-index: 80; max-width: 90%; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+  .undo { position: fixed; left: 14px; bottom: 24px; width: auto; min-height: 44px; background: #0a1d13; color: #e6f7ec; border: 1px solid #0f5c33; z-index: 79; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+  .abs-tag { display: inline-block; background: #9cc7ad; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  #firstName, #lastName { text-align: center; }
+  #confirmBox .card { background: #ff4fa3; color: #111; border-color: #ff2d95; }
+  #confirmBox button { color: #fff; }
+  #confirmBox .item-title { font-size: 24px; text-align: center; }
+  #nights summary { font-weight: bold; cursor: pointer; font-size: 16px; }
+  #nights .n-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid #0a1d13; font-size: 15px; }
+  #app { padding-bottom: 90px; }
+  #dock { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); background: #030a06; border-top: 1px solid #0f5c33; z-index: 40; }
+  #dock button { flex: 1; width: auto; min-height: 52px; font-size: 15px; padding: 6px 4px; white-space: nowrap; }
+  #dock button.dock-main { flex: 1.6; background: #ffd33d; color: #111; }
+  #dock button.dock-start { background: #39ff14; color: #04100a; box-shadow: 0 0 6px #39ff14, 0 0 16px #39ff14; text-shadow: 0 0 4px rgba(255,255,255,0.6); }
+  #dock button:disabled { opacity: 0.4; }
+  #dock button.dock-sq { flex: 0 0 56px; width: 56px; min-width: 56px; height: 56px; min-height: 56px; padding: 0; font-size: 24px; }
+  /* Esconde o selo "Powered by Netlify" nas duas páginas */
+  a[href*="netlify.com"], [class*="netlify" i], [id*="netlify" i], iframe[src*="netlify"] { display: none !important; }
+  #nl-badge, .nl-badge, #nl-card, .nl-card, [id^="nl-"], [class^="nl-"] { display: none !important; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- PIN para alterar nota, código, remover ou apagar -->
+  <div id="pinBox" class="hidden">
+    <div class="card stack">
+      <div class="item-title">Digite o PIN para alterar</div>
+      <input id="pinInput" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
+      <button id="pinOk">Confirmar</button>
+      <button class="sec" id="pinCancel">Cancelar</button>
+      <p id="pinErr" class="err"></p>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="title-row"><h1 class="neon">JANGOKÊ</h1><button class="rank-btn hidden" id="btnBack">← PAINEL</button></div>
+    <div id="stagePanel" class="card"></div>
+    <p id="status">Carregando...</p>
+
+    <h2>NOME DO CANTOR</h2>
+    <div class="stack name-row">
+      <input id="firstName" placeholder="Nome" autocomplete="off">
+      <input id="lastName" placeholder="Sobrenome" autocomplete="off">
+      <button id="btnAddClient">Cadastrar</button>
+    </div>
+    <p id="clientErr" class="err"></p>
+
+    <!-- NOME DO CANTOR: código da música antes de entrar na fila -->
+    <div id="pending" class="card hidden" style="border-color:#0f5c33; margin-top:14px">
+      <div class="stack">
+        <div id="pendingName" class="item-title"></div>
+        <input id="pendingSong" type="text" inputmode="numeric" placeholder="Código" autocomplete="off">
+        <button id="btnPendingAdd">Colocar na fila</button>
+        <button class="sec" id="btnPendingLater">Depois</button>
+        <p id="pendingErr" class="err"></p>
+      </div>
+    </div>
+
+    <h2 id="clientsToggle" style="cursor:pointer; user-select:none">Cadastrados <span id="clientsArrow">▼</span></h2>
+    <input id="search" type="text" placeholder="Buscar cadastrado pelo nome..." autocomplete="off">
+    <div id="clients" class="stack" style="margin-top:12px"></div>
+
+    <!-- Tela de nota -->
+    <div id="current" class="card hidden">
+      <div class="stack">
+        <div id="currentName" class="item-title"></div>
+        <input id="score" type="number" inputmode="numeric" min="0" max="100" placeholder="Nota (0 a 100)">
+        <button id="btnScore">Salvar nota</button>
+        <button class="sec" id="btnCancel">Cancelar</button>
+        <p id="scoreErr" class="err"></p>
+      </div>
+    </div>
+
+    <!-- Caixa de edição (liberada pelo PIN) -->
+    <div id="editBox" class="card hidden" style="margin-top:14px">
+      <div class="stack">
+        <div id="editLabel" class="item-title"></div>
+        <input id="editCode" type="text" inputmode="numeric" placeholder="Código" autocomplete="off">
+        <div id="editScoreWrap" class="stack">
+          <input id="editScore" type="number" inputmode="numeric" min="0" max="100" placeholder="Nota (0 a 100)">
+        </div>
+        <button id="editSave">Salvar alteração</button>
+        <button class="sec" id="editCancel">Cancelar</button>
+        <p id="editErr" class="err"></p>
+      </div>
+    </div>
+
+    <h2>Fila - quem vai cantar</h2>
+    <input id="queueSearch" type="text" placeholder="Buscar na fila..." autocomplete="off" style="margin-bottom:10px">
+    <div id="queue" class="stack"></div>
+
+
+
+    <h2>Virar a noite</h2>
+    <button class="sec" id="btnNight">Virar a noite</button>
+    <p class="small" style="margin-top:6px">Zera a fila e o ranking da noite e guarda as notas em "Noites anteriores", no ranking. Os cadastrados continuam.</p>
+
+    <h2>Zerar dados</h2>
+    <button class="sec" id="btnReset">Apagar fila, cadastrados e ranking</button>
+
+    <div id="rankView" class="hidden" style="margin-top:8px"><h2>RANKING</h2><div id="ranking"></div>
+    <h2>Noites anteriores</h2>
+    <div id="nights" class="stack"></div>
+    <h2 id="importToggle" style="cursor:pointer; user-select:none">Importar lista <span id="importArrow">▼</span></h2>
+    <div id="importBox" class="card stack hidden">
+      <p class="small">Cole uma pessoa por linha: <b>Nome Sobrenome código</b>. Se houver uma linha só com a nota (0 a 100) logo abaixo, a pessoa entra no ranking. Sem nota, entra na fila.</p>
+      <textarea id="importText" placeholder="Daiane Sabino 2853&#10;79&#10;&#10;Ana carolina 17389"></textarea>
+      <button id="btnImport">Importar</button>
+      <p id="importMsg" class="small"></p>
+    </div>
+    </div>
+  </div>
+
+  <nav id="dock"></nav>
+
+  <div id="confirmBox" class="overlay hidden">
+    <div class="card stack">
+      <div id="confirmMsg" class="item-title"></div>
+      <button id="confirmOk">Sim, adicionar</button>
+      <button class="sec" id="confirmNo">Cancelar</button>
+    </div>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+
+<script>
+const PIN = '523';
+const KEY = 'karaoke-fila-v1';
+
+// Supabase (banco online)
+const SB_URL = 'https://dimhxzodbxygrbaeskyu.supabase.co';
+const SB_KEY = 'sb_publishable_GyI3eRnzxCUzHrV3eGys0Q_QJ53zzhX';
+const ROW = SB_URL + '/rest/v1/karaoke?id=eq.1';
+const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+
+function normalize(d) {
+  d = d || {};
+  return {
+    clients: Array.isArray(d.clients) ? d.clients : [],
+    queue: Array.isArray(d.queue) ? d.queue : [],
+    performances: Array.isArray(d.performances) ? d.performances : [],
+    nights: Array.isArray(d.nights) ? d.nights : []
+  };
+}
+function isEmpty(d) {
+  return !d.clients.length && !d.queue.length && !d.performances.length;
+}
+
+// Começa com o que está salvo neste aparelho (cache), depois sincroniza com a nuvem
+let db = normalize(JSON.parse(localStorage.getItem(KEY) || 'null'));
+let currentQueueId = null;
+let openMenuId = null;
+let stage = (() => { try { return JSON.parse(localStorage.getItem('karaoke-stage') || 'null'); } catch (e) { return null; } })(); // { id, step: "palco" | "nota" } para a primeira da fila
+let pendingClientId = null;
+let pinCallback = null;
+let editTarget = null;
+let clientsOpen = false;
+let pendingSync = localStorage.getItem('karaoke-pending') === '1'; // alterações ainda não enviadas à nuvem
+let undoStack = []; // últimas ações, para o botão Desfazer
+
+function setStatus(t) { document.getElementById('status').textContent = t; }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function esc(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+
+// Música já na fila (qualquer pessoa)
+function findSongInQueue(song) { return db.queue.find(q => q.song === song); }
+function songWarning(song, dup) {
+  return 'MÚSICA JÁ ESCOLHIDA!';
+}
+
+// Caixa de confirmação dentro da página
+let confirmCb = null;
+function askConfirm(msg, cb) {
+  confirmCb = cb;
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmBox').classList.remove('hidden');
+}
+document.getElementById('confirmOk').onclick = () => {
+  const cb = confirmCb;
+  confirmCb = null;
+  document.getElementById('confirmBox').classList.add('hidden');
+  if (cb) cb();
+};
+document.getElementById('confirmNo').onclick = () => {
+  confirmCb = null;
+  document.getElementById('confirmBox').classList.add('hidden');
+};
+
+// DESFAZER: guarda uma cópia antes de cada alteração; o botão some após 20 segundos
+const UNDO_MS = 20000;
+let undoTimer = null;
+function snapshot(label) {
+  undoStack.push({ label, data: JSON.stringify(db), at: Date.now() });
+  if (undoStack.length > 20) undoStack.shift();
+}
+function undoLast() {
+  const u = undoStack.pop();
+  if (!u || Date.now() - u.at >= UNDO_MS) return;
+  db = normalize(JSON.parse(u.data));
+  if (stage && !db.queue.some(q => q.id === stage.id)) stage = null;
+  openMenuId = null;
+  save();
+  render();
+  showToast('Desfeito: ' + u.label);
+}
+
+// SALVAR: guarda neste aparelho e envia para a nuvem
+let lastLocalChange = 0;
+function save() {
+  lastLocalChange = Date.now();
+  localStorage.setItem(KEY, JSON.stringify(db));
+  pendingSync = true;
+  localStorage.setItem('karaoke-pending', '1');
+  setStatus('Salvando...');
+  fetch(ROW, { method: 'PATCH', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify({ dados: db }) })
+    .then(r => {
+      pendingSync = false;
+      localStorage.removeItem('karaoke-pending');
+      if (!r.ok) { setStatus('Erro ' + r.status + ' ao salvar na nuvem'); return; }
+      setStatus('Salvo na nuvem');
+    })
+    .catch(err => setStatus('Não enviou para a nuvem (' + (err && err.name || 'erro') + ': ' + (err && err.message || '') + '). Salvo neste aparelho, tentando de novo.'));
+}
+// Reenvia o que ficou pendente (ex.: Wi-Fi caiu)
+function flushPending() { if (pendingSync) save(); }
+window.addEventListener('online', flushPending);
+
+// CARREGAR da nuvem
+async function loadRemote() {
+  try {
+    const r = await fetch(ROW + '&select=dados', { headers: SB_HEADERS });
+    if (!r.ok) throw new Error(r.status);
+    const rows = await r.json();
+    const remote = normalize(rows.length ? rows[0].dados : null);
+    if (pendingSync || (isEmpty(remote) && !isEmpty(db))) {
+      // Tem alteração pendente deste aparelho, ou nuvem vazia com dados aqui: sobe os dados daqui
+      save();
+    } else {
+      db = remote;
+      localStorage.setItem(KEY, JSON.stringify(db));
+      setStatus('Conectado');
+    }
+  } catch (e) {
+    setStatus('Não carregou da nuvem (' + (e && e.name || 'erro') + ': ' + (e && e.message || e) + '). Mostrando os dados salvos neste aparelho.');
+  }
+  render();
+}
+
+function songsSung(clientId) {
+  return db.performances.filter(p => p.clientId === clientId).length;
+}
+// 0 = nunca cantou (fica na frente)
+function lastSung(clientId) {
+  const ps = db.performances.filter(p => p.clientId === clientId);
+  return ps.length ? Math.max(...ps.map(p => p.at)) : 0;
+}
+function clientName(id) {
+  const c = db.clients.find(x => x.id === id);
+  return c ? c.name : '?';
+}
+
+// Regra 1: quem cantou menos vai na frente
+// Regra 2: quem cantou há mais tempo (ou nunca) vai na frente
+function sortedQueue() {
+  return [...db.queue].sort((a, b) => {
+    const pa = a.onStage ? 0 : 1, pb = b.onStage ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    const aa = a.absent ? 1 : 0, ba = b.absent ? 1 : 0;
+    if (aa !== ba) return aa - ba;
+    if (aa) return (a.absentAt || 0) - (b.absentAt || 0);
+    const ca = songsSung(a.clientId), cb = songsSung(b.clientId);
+    if (ca !== cb) return ca - cb;
+    const la = lastSung(a.clientId), lb = lastSung(b.clientId);
+    if (la !== lb) return la - lb;
+    return a.addedAt - b.addedAt;
+  });
+}
+
+function fmtDate(ts) {
+  return ts ? new Date(ts).toLocaleString('pt-BR') : 'nunca';
+}
+
+// PIN
+function askPin(cb) {
+  pinCallback = cb;
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinErr').textContent = '';
+  document.getElementById('pinBox').classList.remove('hidden');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+document.getElementById('pinOk').onclick = () => {
+  if (document.getElementById('pinInput').value === PIN) {
+    document.getElementById('pinBox').classList.add('hidden');
+    const cb = pinCallback;
+    pinCallback = null;
+    if (cb) cb();
+  } else {
+    document.getElementById('pinErr').textContent = 'PIN incorreto';
+  }
+};
+document.getElementById('pinCancel').onclick = () => {
+  pinCallback = null;
+  document.getElementById('pinBox').classList.add('hidden');
+};
+document.getElementById('pinInput').onkeydown = e => {
+  if (e.key === 'Enter') document.getElementById('pinOk').click();
+};
+
+// EDITAR (código na fila; nota no ranking)
+function openEdit(t) {
+  const isPerf = t.type === 'perf';
+  const item = isPerf ? db.performances.find(p => p.id === t.id) : db.queue.find(q => q.id === t.id);
+  if (!item) return;
+  editTarget = t;
+  document.getElementById('editLabel').textContent =
+    (isPerf ? 'Alterar nota: ' : 'Alterar código: ') + clientName(item.clientId);
+  document.getElementById('editCode').value = item.song;
+  document.getElementById('editCode').classList.toggle('hidden', isPerf);
+  document.getElementById('editScoreWrap').classList.toggle('hidden', !isPerf);
+  document.getElementById('editScore').value = isPerf ? item.score : '';
+  document.getElementById('editErr').textContent = '';
+  document.getElementById('editBox').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.getElementById('editCode').oninput = e => {
+  e.target.value = e.target.value.replace(/\D/g, '');
+};
+document.getElementById('editSave').onclick = () => {
+  const err = document.getElementById('editErr');
+  const before = JSON.stringify(db);
+  if (editTarget.type === 'perf') {
+    const s = parseFloat(document.getElementById('editScore').value);
+    if (isNaN(s) || s < 0 || s > 100) { err.textContent = 'Informe uma nota de 0 a 100'; return; }
+    const p = db.performances.find(x => x.id === editTarget.id);
+    if (p) p.score = s;
+  } else {
+    const code = document.getElementById('editCode').value.replace(/\D/g, '');
+    if (!code) { err.textContent = 'Digite o código da música'; return; }
+    const q = db.queue.find(x => x.id === editTarget.id);
+    if (q) q.song = code;
+  }
+  if (JSON.stringify(db) !== before) { undoStack.push({ label: 'alteração', data: before, at: Date.now() }); }
+  save();
+  editTarget = null;
+  document.getElementById('editBox').classList.add('hidden');
+  render();
+};
+document.getElementById('editCancel').onclick = () => {
+  editTarget = null;
+  document.getElementById('editBox').classList.add('hidden');
+};
+
+// CADASTRAR CLIENTE
+document.getElementById('btnAddClient').onclick = () => {
+  const first = document.getElementById('firstName').value.trim();
+  const last = document.getElementById('lastName').value.trim();
+  const err = document.getElementById('clientErr');
+  if (!first || !last) { err.textContent = 'Preencha nome e sobrenome'; return; }
+  const name = first + ' ' + last;
+  const same = db.clients.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (same) {
+    askConfirm('Já existe um cadastrado com o nome "' + name + '". Cadastrar outra pessoa com esse nome?', () => doAddClient(name));
+    return;
+  }
+  doAddClient(name);
+};
+function doAddClient(name) {
+  const newId = uid();
+  snapshot('cadastro de ' + name);
+  db.clients.push({ id: newId, name });
+  save();
+  document.getElementById('firstName').value = '';
+  document.getElementById('lastName').value = '';
+  document.getElementById('search').value = '';
+  document.getElementById('clientErr').textContent = '';
+  pendingClientId = newId;
+  render();
+  setTimeout(() => document.getElementById('pendingSong').focus(), 150);
+}
+
+// NOME DO CANTOR: código da música antes de entrar na fila
+document.getElementById('btnPendingAdd').onclick = () => {
+  const err = document.getElementById('pendingErr');
+  const song = document.getElementById('pendingSong').value.replace(/\D/g, '');
+  if (!song) { err.textContent = 'Digite o código da música'; return; }
+  const dup = findSongInQueue(song);
+  if (dup) { askConfirm(songWarning(song, dup), () => doPendingAdd(song)); return; }
+  doPendingAdd(song);
+};
+function doPendingAdd(song) {
+  snapshot('entrada de ' + clientName(pendingClientId));
+  db.queue.push({ id: uid(), clientId: pendingClientId, song, addedAt: Date.now() });
+  save();
+  pendingClientId = null;
+  document.getElementById('pendingSong').value = '';
+  document.getElementById('pendingErr').textContent = '';
+  render();
+}
+document.getElementById('btnPendingLater').onclick = () => {
+  pendingClientId = null;
+  document.getElementById('pendingSong').value = '';
+  document.getElementById('pendingErr').textContent = '';
+  render();
+};
+// Ajusta o tamanho da fonte do código para caber na tela (celular ou computador)
+function fitCodeFont(el, max) {
+  if (!el || !el.clientWidth) return; // campo escondido: nada a medir
+  const cs = getComputedStyle(el);
+  const avail = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 12;
+  const text = el.value || el.placeholder || '';
+  const spacing = parseFloat(cs.letterSpacing) || 0;
+  const ctx = fitCodeFont.ctx || (fitCodeFont.ctx = document.createElement('canvas').getContext('2d'));
+  let size = max;
+  while (size > 16) {
+    ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+    if (ctx.measureText(text).width + spacing * text.length <= avail) break;
+    size -= 2;
+  }
+  el.style.fontSize = size + 'px';
+}
+document.getElementById('pendingSong').oninput = e => {
+  e.target.value = e.target.value.replace(/\D/g, '');
+  fitCodeFont(e.target, 128);
+};
+window.addEventListener('resize', () => fitCodeFont(document.getElementById('pendingSong'), 128));
+
+// Colocar música de um cadastrado na fila
+function addToQueue(clientId) {
+  const song = document.getElementById('song-' + clientId).value.replace(/\D/g, '');
+  if (!song) return;
+  const dup = findSongInQueue(song);
+  if (dup) { askConfirm(songWarning(song, dup), () => doAddToQueue(clientId, song)); return; }
+  doAddToQueue(clientId, song);
+}
+function doAddToQueue(clientId, song) {
+  snapshot('entrada de ' + clientName(clientId));
+  db.queue.push({ id: uid(), clientId, song, addedAt: Date.now() });
+  openClientId = null;
+  save();
+  render();
+}
+
+// FILA: remover e editar pedem PIN; tocar no cartão inicia a apresentação
+document.getElementById('queue').oninput = e => {
+  if (e.target.id === 'stageScore') e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+};
+
+// Enter confirma em todos os campos
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const id = e.target.id || '';
+  if (id === 'firstName') { document.getElementById('lastName').focus(); return; }
+  if (id === 'lastName') { document.getElementById('btnAddClient').click(); return; }
+  if (id === 'stageScore') { const b = document.querySelector('[data-save]'); if (b) b.click(); return; }
+  if (id === 'pendingSong') { document.getElementById('btnPendingAdd').click(); return; }
+  if (id === 'editCode' || id === 'editScore') { document.getElementById('editSave').click(); return; }
+  if (id.startsWith('song-')) { const b = document.querySelector('[data-add="' + id.slice(5) + '"]'); if (b) b.click(); }
+});
+
+document.getElementById('queueSearch').oninput = renderQueue;
+
+// Atualização automática: não mexe enquanto alguém está digitando ou com algo aberto
+function busy() {
+  const a = document.activeElement;
+  const typing = a && ['INPUT', 'TEXTAREA'].includes(a.tagName);
+  const pinOpen = !document.getElementById('pinBox').classList.contains('hidden');
+  const editOpen = !document.getElementById('editBox').classList.contains('hidden');
+  const recentSave = Date.now() - lastLocalChange < 4000;
+  const confirmOpen = !document.getElementById('confirmBox').classList.contains('hidden');
+  return typing || pinOpen || editOpen || confirmOpen || recentSave || !!stage || !!openClientId || !!pendingClientId || !!openMenuId;
+}
+async function refreshRemote() {
+  if (pendingSync) { save(); return; }
+  if (busy()) return;
+  try {
+    const r = await fetch(ROW + '&select=dados', { headers: SB_HEADERS, cache: 'no-store' });
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!rows.length) return;
+    const remote = normalize(rows[0].dados);
+    if (JSON.stringify(remote) === JSON.stringify(db) || busy()) return;
+    db = remote;
+    localStorage.setItem(KEY, JSON.stringify(db));
+    render();
+  } catch (e) { /* sem internet: mantém o que está na tela */ }
+}
+setInterval(refreshRemote, 8000);
+
+// Ranking na mesma página: mostra só o ranking e volta ao painel
+function setView(rank) {
+  const app = document.getElementById('app');
+  [...app.children].forEach(ch => {
+    if (ch.classList.contains('title-row') || ch.id === 'rankView' || ch.id === 'editBox') return;
+    if (rank) {
+      ch.dataset.wasHidden = ch.classList.contains('hidden') ? '1' : '0';
+      ch.classList.add('hidden');
+    } else if (ch.dataset.wasHidden === '0') {
+      ch.classList.remove('hidden');
+    }
+  });
+  document.getElementById('rankView').classList.toggle('hidden', !rank);
+  document.getElementById('btnBack').classList.toggle('hidden', !rank);
+  if (rank) renderRanking();
+  renderDock();
+  window.scrollTo({ top: 0 });
+}
+document.getElementById('btnBack').onclick = () => setView(false);
+
+// DOCK: atalhos na parte de baixo (ação da vez, fila, cadastrar, ranking)
+function renderDock() {
+  const dock = document.getElementById('dock');
+  const inRank = !document.getElementById('rankView').classList.contains('hidden');
+  if (inRank) { dock.innerHTML = '<button data-dock="painel">← PAINEL</button>'; return; }
+  const first = sortedQueue()[0];
+  const s = first && stage && stage.id === first.id ? stage.step : null;
+  const label = s === 'nota' ? 'SALVAR NOTA' : (s === 'palco' ? 'NO PALCO' : 'COMEÇAR');
+  const cls = s === null ? 'dock-main dock-start' : 'dock-main';
+  dock.innerHTML = `
+    <button class="${cls}" data-dock="stage" ${first ? '' : 'disabled'}>${label}</button>
+    <button data-dock="fila">Fila</button>
+    <button data-dock="cadastrar">Cadastrar</button>
+    <button class="dock-sq" data-dock="ranking" aria-label="Ranking">🏆</button>`;
+}
+document.getElementById('dock').onclick = e => {
+  const b = e.target.closest('[data-dock]');
+  if (!b) return;
+  const act = b.dataset.dock;
+  if (act === 'painel') { setView(false); return; }
+  if (act === 'ranking') { setView(true); return; }
+  if (act === 'fila') { document.getElementById('queueSearch').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (act === 'cadastrar') {
+    const f = document.getElementById('firstName');
+    f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => f.focus(), 300);
+    return;
+  }
+  if (act === 'stage') {
+    const first = sortedQueue()[0];
+    if (!first) return;
+    const s = stage && stage.id === first.id ? stage.step : null;
+    if (s === 'nota') { saveStageScore(first.id); return; }
+    stage = { id: first.id, step: s === 'palco' ? 'nota' : 'palco' };
+    if (!s) markOnStage(first.id);
+    renderQueue();
+    renderDock();
+  }
+};
+
+
+
+document.getElementById('queue').onclick = e => {
+  const del = e.target.closest('[data-delq]');
+  if (del) {
+    const id = del.dataset.delq;
+    askPin(() => {
+      const gone = db.queue.find(x => x.id === id);
+      if (gone) snapshot('remoção de ' + clientName(gone.clientId));
+      db.queue = db.queue.filter(x => x.id !== id);
+      if (stage && stage.id === id) stage = null;
+      save();
+      render();
+    });
+    return;
+  }
+  const edit = e.target.closest('[data-editq]');
+  if (edit) {
+    const id = edit.dataset.editq;
+    openMenuId = null;
+    askPin(() => openEdit({ type: 'queue', id }));
+    return;
+  }
+  const menu = e.target.closest('[data-menu]');
+  if (menu) { const id = menu.dataset.menu; openMenuId = openMenuId === id ? null : id; renderQueue(); return; }
+  const abs = e.target.closest('[data-absent]');
+  if (abs) { toggleAbsent(abs.dataset.absent); return; }
+  const palco = e.target.closest('[data-palco]');
+  if (palco) { stage = { id: palco.dataset.palco, step: 'palco' }; markOnStage(stage.id); renderQueue(); return; }
+  const nota = e.target.closest('[data-nota]');
+  if (nota) { stage = { id: nota.dataset.nota, step: 'nota' }; renderQueue(); return; }
+  const sv = e.target.closest('[data-save]');
+  if (sv) { saveStageScore(sv.dataset.save); return; }
+};
+
+// RANKING: editar nota pede PIN
+document.getElementById('ranking').onclick = e => {
+  const b = e.target.closest('[data-editp]');
+  if (!b) return;
+  const id = b.dataset.editp;
+  askPin(() => openEdit({ type: 'perf', id }));
+};
+
+// Salvar nota da apresentação atual
+document.getElementById('btnScore').onclick = () => {
+  const err = document.getElementById('scoreErr');
+  const s = parseFloat(document.getElementById('score').value);
+  if (isNaN(s) || s < 0 || s > 100) { err.textContent = 'Informe uma nota de 0 a 100'; return; }
+  const item = db.queue.find(x => x.id === currentQueueId);
+  if (!item) { currentQueueId = null; renderCurrent(); return; }
+  db.performances.push({ id: uid(), clientId: item.clientId, song: item.song, score: s, at: Date.now() });
+  db.queue = db.queue.filter(x => x.id !== currentQueueId);
+  currentQueueId = null;
+  save();
+  render();
+};
+document.getElementById('btnCancel').onclick = () => {
+  currentQueueId = null;
+  renderCurrent();
+};
+
+// RENDERIZAÇÃO
+function renderPending() {
+  const box = document.getElementById('pending');
+  const c = db.clients.find(x => x.id === pendingClientId);
+  if (!c) { pendingClientId = null; box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  document.getElementById('pendingName').textContent = c.name;
+  fitCodeFont(document.getElementById('pendingSong'), 128);
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 2500);
+}
+function persistStage() {
+  try {
+    if (stage) localStorage.setItem('karaoke-stage', JSON.stringify(stage));
+    else localStorage.removeItem('karaoke-stage');
+  } catch (e) { /* sem armazenamento: segue normal */ }
+}
+
+function renderQueue() {
+  persistStage();
+  const full = sortedQueue();
+  const first = full[0];
+  const term = (document.getElementById('queueSearch').value || '').trim().toLowerCase();
+  const q = full.filter(it => clientName(it.clientId).toLowerCase().includes(term));
+  const el = document.getElementById('queue');
+  if (!full.length) { el.innerHTML = '<p class="small">Fila vazia</p>'; renderStagePanel(); return; }
+  if (!q.length) { el.innerHTML = '<p class="small">Ninguém encontrado na fila</p>'; renderStagePanel(); return; }
+  el.innerHTML = q.map(it => {
+    const isFirst = first && it.id === first.id;
+    let stageHtml = '';
+    if (isFirst) {
+      const s = stage && stage.id === it.id ? stage.step : null;
+      if (s === 'nota') {
+        stageHtml = `<div class="score-row"><input id="stageScore" type="text" inputmode="numeric" placeholder="Nota" autocomplete="off"><button class="save-btn" data-save="${it.id}">SALVAR NOTA</button></div><p id="stageErr" class="err"></p>`;
+      } else if (s === 'palco') {
+        stageHtml = `<button class="stage-btn palco" data-nota="${it.id}">NO PALCO</button>`;
+      } else {
+        stageHtml = `<button class="stage-btn" data-palco="${it.id}">COMEÇAR</button>`;
+      }
+    }
+    return `
+    <div class="card ${isFirst ? 'first-up' : ''}">
+      <div class="item-title">${songsSung(it.clientId)}x ${esc(clientName(it.clientId))} — <span class="queue-code">${esc(it.song)}</span>${it.absent ? '<span class="abs-tag">AUSENTE</span>' : ''}</div>
+      ${stageHtml}
+      <div class="card-foot">
+        ${openMenuId === it.id ? `<button class="mini" data-absent="${it.id}">${it.absent ? 'Voltou (presente)' : 'Ausente'}</button><button class="mini" data-editq="${it.id}">Editar código</button><button class="mini" data-delq="${it.id}" style="color:#ff6b6b">Remover da fila</button>` : ''}
+        <button class="dots" data-menu="${it.id}" aria-label="Opções">⋮</button>
+      </div>
+    </div>`;
+  }).join('');
+  if (stage && stage.step === 'nota') {
+    setTimeout(() => { const f = document.getElementById('stageScore'); if (f) f.focus(); }, 50);
+  }
+  renderStagePanel();
+}
+
+// NO PALCO: a pessoa fica em primeiro até a nota ser salva
+function markOnStage(id) {
+  db.queue.forEach(q => { if (q.id === id) q.onStage = true; else delete q.onStage; });
+  save();
+}
+
+// AUSENTE: vai para o fim da fila, sem registrar música cantada
+function toggleAbsent(id) {
+  const item = db.queue.find(x => x.id === id);
+  openMenuId = null;
+  if (!item) { render(); return; }
+  const nm = clientName(item.clientId);
+  snapshot((item.absent ? 'voltou: ' : 'ausente: ') + nm);
+  if (item.absent) { item.absent = false; delete item.absentAt; }
+  else {
+    item.absent = true;
+    item.absentAt = Date.now();
+    delete item.onStage;
+    if (stage && stage.id === id) stage = null;
+  }
+  save();
+  render();
+}
+
+function saveStageScore(id) {
+  const err = document.getElementById('stageErr');
+  const s = parseFloat(document.getElementById('stageScore').value);
+  if (isNaN(s) || s < 0 || s > 100) { err.textContent = 'Informe uma nota de 0 a 100'; return; }
+  const item = db.queue.find(x => x.id === id);
+  stage = null;
+  if (!item) { render(); return; }
+  const nm = clientName(item.clientId);
+  snapshot('nota de ' + nm);
+  db.performances.push({ id: uid(), clientId: item.clientId, song: item.song, score: s, at: Date.now() });
+  db.queue = db.queue.filter(x => x.id !== id);
+  save();
+  render();
+  showToast(`<div class="toast-nota">NOTA: ${s}</div><div>para ${esc(nm)}</div>`);
+}
+
+// Painel fixo no topo: quem está no palco e quem é o próximo
+function renderStagePanel() {
+  const panel = document.getElementById('stagePanel');
+  const full = sortedQueue();
+  const cur = stage ? full.find(x => x.id === stage.id) : null;
+  const next = full.find(x => !cur || x.id !== cur.id);
+  const curHtml = cur
+    ? `<div class="sp-label">NO PALCO</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>`
+    : '';
+  const nextHtml = next
+    ? `<div class="sp-next">PRÓXIMO: <b>${esc(clientName(next.clientId))}</b> — <span class="queue-code">${esc(next.song)}</span></div>`
+    : '';
+  panel.innerHTML = curHtml + nextHtml;
+}
+
+function renderCurrent() {
+  const box = document.getElementById('current');
+  const item = db.queue.find(x => x.id === currentQueueId);
+  if (!item) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  document.getElementById('currentName').innerHTML =
+    `Cantando agora:<br>${esc(clientName(item.clientId))} — música ${esc(item.song)}`;
+}
+
+let openClientId = null;
+
+function renderClients() {
+  const el = document.getElementById('clients');
+  const term = document.getElementById('search').value.trim().toLowerCase();
+  const showList = clientsOpen || term.length > 0;
+  document.getElementById('clientsArrow').textContent = clientsOpen ? '▲' : '▼';
+  el.classList.toggle('hidden', !showList);
+  if (!showList) { el.innerHTML = ''; return; }
+  if (!db.clients.length) { el.innerHTML = '<p class="small">Nenhum cadastrado</p>'; return; }
+  const list = [...db.clients]
+    .filter(c => c.name.toLowerCase().includes(term))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  if (!list.length) { el.innerHTML = '<p class="small">Nenhum cadastrado encontrado</p>'; return; }
+  el.innerHTML = list.map(c => {
+    const isOpen = openClientId === c.id;
+    return `
+    <div class="card ${isOpen ? 'open' : ''}">
+      <div class="item-title client-name" data-open="${c.id}">${esc(c.name)}</div>
+      ${isOpen ? `<div class="add-row">
+        <input id="song-${c.id}" inputmode="numeric" placeholder="CÓDIGO" autocomplete="off">
+        <button data-add="${c.id}">Colocar na fila</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  el.querySelectorAll('input[id^="song-"]').forEach(inp => {
+    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, ''); };
+  });
+}
+
+// Cadastrados: toque no nome para abrir o campo CÓDIGO
+document.getElementById('clients').onclick = e => {
+  const nameEl = e.target.closest('[data-open]');
+  if (nameEl) {
+    const id = nameEl.dataset.open;
+    openClientId = openClientId === id ? null : id;
+    renderClients();
+    if (openClientId) {
+      setTimeout(() => { const f = document.getElementById('song-' + id); if (f) f.focus(); }, 50);
+    }
+    return;
+  }
+  const add = e.target.closest('[data-add]');
+  if (add) {
+    const id = add.dataset.add;
+    const inp = document.getElementById('song-' + id);
+    if (!inp || !inp.value.replace(/\D/g, '')) return;
+    addToQueue(id);
+  }
+};
+
+// Noites já arquivadas (histórico)
+function renderNights() {
+  const el = document.getElementById('nights');
+  if (!el) return;
+  if (!db.nights.length) { el.innerHTML = '<p class="small">Nenhuma noite arquivada ainda</p>'; return; }
+  el.innerHTML = [...db.nights].sort((a, b) => b.at - a.at).map(n => {
+    const rows = [...n.performances].sort((a, b) => b.score - a.score || a.at - b.at);
+    const best = rows.length ? rows[0].score : '-';
+    const lines = rows.map((p, i) => `<div class="n-row"><span>${i + 1}º ${esc(clientName(p.clientId))}</span><b>${p.score}</b></div>`).join('');
+    return `<details class="card"><summary>${new Date(n.at).toLocaleDateString('pt-BR')} — ${rows.length} notas · melhor ${best}</summary>${lines}</details>`;
+  }).join('');
+}
+
+function renderRanking() {
+  const el = document.getElementById('ranking');
+  if (!el) return;
+  const list = [...db.performances].sort((a, b) => b.score - a.score || a.at - b.at);
+  if (!list.length) { el.innerHTML = '<p class="small">Ninguém cantou ainda</p>'; return; }
+  const medal = i => i === 0 ? '🥇' : (i + 1) + 'º';
+  const lowScore = Math.min(...list.map(p => p.score));
+  const lastIdx = list.length - 1;
+  // Menor nota vai logo abaixo do 1º lugar, sem ocupar a 2ª posição
+  let order = list.map((_, i) => i);
+  if (list.length > 2) {
+    const rest = order.filter(i => i !== 0 && i !== lastIdx);
+    order = [0, lastIdx, ...rest];
+  }
+  el.innerHTML = order.map(i => {
+    const p = list[i];
+    const isLow = list.length > 1 && i === lastIdx && p.score === lowScore;
+    const cls = isLow ? 'rank-low' : (i < 3 ? 'rank-' + (i + 1) : '');
+    const tag = '';
+    const pos = isLow ? '' : medal(i);
+    const bg = i === 0 ? '<span class="bg-emoji bg-cold">👑✨</span>' : (isLow ? '<span class="bg-emoji bg-cold">💩😂</span>' : '');
+    return `
+    <div class="rank-card ${cls}">
+      ${bg}
+      <div class="rank-pos">${pos}</div>
+      <div class="rank-info">
+        <b>${esc(clientName(p.clientId))}</b> ${tag}
+        <button class="mini" data-editp="${p.id}">Editar nota</button>
+      </div>
+      <div class="rank-score">${p.score}</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('search').oninput = renderClients;
+
+// Importar lista: começa recolhida, abre ao tocar na seta
+document.getElementById('importToggle').onclick = () => {
+  const box = document.getElementById('importBox');
+  const open = box.classList.toggle('hidden') === false;
+  document.getElementById('importArrow').textContent = open ? '▲' : '▼';
+};
+
+document.getElementById('clientsToggle').onclick = () => {
+  clientsOpen = !clientsOpen;
+  renderClients();
+};
+
+// IMPORTAR LISTA
+// "Nome Sobrenome código" + linha seguinte só com a nota = ranking
+// "Nome Sobrenome código" sem nota logo abaixo = fila
+document.getElementById('btnImport').onclick = () => {
+  const msg = document.getElementById('importMsg');
+  const lines = document.getElementById('importText').value
+    .split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  const entries = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^(.*\S)\s+(\d+)$/);
+    if (!m) continue;
+    const name = m[1].replace(/\s+/g, ' ').trim();
+    const song = m[2];
+    let score = null;
+    if (i + 1 < lines.length && /^\d+(\.\d+)?$/.test(lines[i + 1])) {
+      const s = parseFloat(lines[i + 1]);
+      if (s >= 0 && s <= 100) { score = s; i++; }
+    }
+    entries.push({ name, song, score });
+  }
+
+  if (!entries.length) { msg.textContent = 'Nenhuma linha válida. Use: Nome Sobrenome código'; return; }
+
+  snapshot('importação');
+  let qCount = 0, rCount = 0, newClients = 0;
+  const now = Date.now();
+  entries.forEach((en, idx) => {
+    let c = db.clients.find(x => x.name.toLowerCase() === en.name.toLowerCase());
+    if (!c) { c = { id: uid(), name: en.name }; db.clients.push(c); newClients++; }
+    if (en.score !== null) {
+      db.performances.push({ id: uid(), clientId: c.id, song: en.song, score: en.score, at: now - (entries.length - idx) * 1000 });
+      rCount++;
+    } else {
+      db.queue.push({ id: uid(), clientId: c.id, song: en.song, addedAt: now + idx });
+      qCount++;
+    }
+  });
+
+  save();
+  document.getElementById('importText').value = '';
+  msg.textContent = `Importado: ${qCount} na fila, ${rCount} no ranking, ${newClients} novos cadastros.`;
+  render();
+};
+
+// VIRAR A NOITE (exige PIN): arquiva as notas, zera a fila; cadastrados continuam
+document.getElementById('btnNight').onclick = () => {
+  askPin(() => {
+    snapshot('virar a noite');
+    if (db.performances.length) db.nights.push({ id: uid(), at: Date.now(), performances: db.performances });
+    db.performances = [];
+    db.queue = [];
+    stage = null;
+    openMenuId = null;
+    currentQueueId = null;
+    persistStage();
+    save();
+    render();
+    showToast('Noite arquivada. Fila e ranking zerados.');
+  });
+};
+
+// ZERAR TUDO (exige PIN)
+document.getElementById('btnReset').onclick = () => {
+  askPin(() => {
+    snapshot('apagar tudo');
+    db = normalize(null);
+    currentQueueId = null;
+    pendingClientId = null;
+    editTarget = null;
+    document.getElementById('editBox').classList.add('hidden');
+    document.getElementById('current').classList.add('hidden');
+    save();
+    render();
+  });
+};
+
+function render() {
+  renderPending();
+  renderQueue();
+  renderCurrent();
+  renderClients();
+  renderRanking();
+  renderNights();
+  renderDock();
+}
+
+// Mostra o que já está neste aparelho e depois sincroniza com a nuvem
+render();
+loadRemote();
+</script>
+</body>
+</html>
