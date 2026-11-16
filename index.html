@@ -114,7 +114,9 @@
   .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: #ffd33d; color: #111; font-weight: bold; padding: 12px 18px; border-radius: 10px; z-index: 80; max-width: 90%; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .undo { position: fixed; left: 14px; bottom: 24px; width: auto; min-height: 44px; background: #0a1d13; color: #e6f7ec; border: 1px solid #0f5c33; z-index: 79; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .abs-tag { display: inline-block; background: #9cc7ad; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-  #firstName, #lastName { text-align: center; }
+  #firstName, #lastName, #mesa { text-align: center; }
+  #mesa { -moz-appearance: textfield; appearance: textfield; }
+  #mesa::-webkit-inner-spin-button, #mesa::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   #confirmBox .card { background: #ff4fa3; color: #111; border-color: #ff2d95; }
   #confirmBox button { color: #fff; }
   #confirmBox .item-title { font-size: 24px; text-align: center; }
@@ -629,7 +631,8 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const id = e.target.id || '';
   if (id === 'firstName') { document.getElementById('lastName').focus(); return; }
-  if (id === 'lastName') { document.getElementById('btnAddClient').click(); return; }
+  if (id === 'lastName') { document.getElementById('mesa').focus(); return; }
+  if (id === 'mesa') { document.getElementById('btnAddClient').click(); return; }
   if (id === 'stageScore') { const b = document.querySelector('[data-save]'); if (b) b.click(); return; }
   if (id === 'pendingSong') { document.getElementById('btnPendingAdd').click(); return; }
   if (id === 'editCode' || id === 'editScore') { document.getElementById('editSave').click(); return; }
