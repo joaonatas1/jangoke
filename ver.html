@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#010503">
+<title>JANGOKÊ — Fila e ranking</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #010503; color: #e6f7ec; font-family: system-ui, -apple-system, sans-serif; }
+  body { padding: 14px; max-width: 720px; margin: 0 auto; padding-bottom: 40px; }
+  h1 { font-family: "Bebas Neue", Impact, sans-serif; font-weight: normal; text-align: center; font-size: 56px; line-height: 1; letter-spacing: 4px; color: #fff; text-shadow: 0 0 4px #fff, 0 0 10px #ff2d95, 0 0 22px #ff2d95, 0 0 38px #ff2d95, 0 0 56px #00f0ff; margin: 10px 0 6px; }
+  h2 { font-size: 18px; color: #e6f7ec; border-bottom: 1px solid #0a1d13; padding-bottom: 6px; margin: 26px 0 12px; }
+  .card { background: #030a06; border: 1px solid #0a1d13; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+  .card.first { border-color: #1e8f4e; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .nome { font-size: 20px; font-weight: bold; word-break: break-word; }
+  .info { font-size: 14px; color: #9cc7ad; margin-top: 4px; }
+  .code { font-size: 30px; font-weight: bold; color: #ffd33d; flex-shrink: 0; }
+  .score { font-size: 30px; font-weight: bold; color: #ffd33d; flex-shrink: 0; }
+  .pos { font-size: 22px; font-weight: bold; color: #ffd33d; min-width: 44px; text-align: center; flex-shrink: 0; }
+  .tag { display: inline-block; background: #9cc7ad; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  .tag.palco { background: #ffd33d; }
+  .small { font-size: 13px; color: #7fae92; text-align: center; margin: 6px 0; }
+</style>
+</head>
+<body>
+
+  <h1>JANGOKÊ</h1>
+  <p id="status" class="small">Carregando...</p>
+
+  <h2>Fila - quem vai cantar</h2>
+  <div id="fila"></div>
+
+  <h2>Ranking</h2>
+  <div id="ranking"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { mesaDe, ordenarFila, ordenarRanking } from './fila.js';
+
+const firebaseApp = initializeApp({
+  apiKey: 'AIzaSyD13Y66-paZkQsmlXRm3QAhJfs-x_UFJRU',
+  authDomain: 'jangoke-karaoke.firebaseapp.com',
+  projectId: 'jangoke-karaoke',
+  storageBucket: 'jangoke-karaoke.firebasestorage.app',
+  messagingSenderId: '775660173991',
+  appId: '1:775660173991:web:a8880579c121a82a4ab982'
+});
+const DOC = doc(getFirestore(firebaseApp), 'karaoke', 'main');
+
+function esc(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+
+function normalize(d) {
+  d = d || {};
+  return {
+    clients: Array.isArray(d.clients) ? d.clients : [],
+    queue: Array.isArray(d.queue) ? d.queue : [],
+    performances: Array.isArray(d.performances) ? d.performances : [],
+    nights: Array.isArray(d.nights) ? d.nights : []
+  };
+}
+function nomeDe(db, id) {
+  const c = db.clients.find(x => x.id === id);
+  return c ? c.name : '?';
+}
+function cantou(db, id) {
+  return db.performances.filter(p => p.clientId === id).length;
+}
+
+function desenhar(db) {
+  const fila = ordenarFila(db);
+  document.getElementById('fila').innerHTML = fila.length ? fila.map((q, i) => {
+    const mesa = mesaDe(db, q.clientId);
+    const tagMesa = mesa === 'sem-mesa' ? '' : `<span class="tag">Mesa ${esc(mesa)}</span>`;
+    const tagPalco = q.onStage ? '<span class="tag palco">NO PALCO</span>' : '';
+    const tagAusente = q.absent ? '<span class="tag">AUSENTE</span>' : '';
+    return `<div class="card ${i === 0 ? 'first' : ''}">
+      <div class="row">
+        <div>
+          <div class="nome">${esc(nomeDe(db, q.clientId))}${tagMesa}${tagPalco}${tagAusente}</div>
+          <div class="info">${cantou(db, q.clientId)} música(s) já cantada(s)</div>
+        </div>
+        <div class="code">${esc(q.song)}</div>
+      </div>
+    </div>`;
+  }).join('') : '<p class="small">Fila vazia</p>';
+
+  const rank = ordenarRanking(db);
+  document.getElementById('ranking').innerHTML = rank.length ? rank.map((p, i) => `<div class="card">
+      <div class="row">
+        <div class="pos">${i + 1}º</div>
+        <div class="nome" style="flex:1">${esc(nomeDe(db, p.clientId))}</div>
+        <div class="score">${esc(p.score)}</div>
+      </div>
+    </div>`).join('') : '<p class="small">Ninguém cantou ainda</p>';
+}
+
+onSnapshot(DOC, snap => {
+  const db = normalize(snap.exists() ? snap.data().dados : null);
+  desenhar(db);
+  document.getElementById('status').textContent = 'Atualiza sozinho';
+}, () => {
+  document.getElementById('status').textContent = 'Não consegui carregar agora. Tente de novo em instantes.';
+});
+</script>
+</body>
+</html>
