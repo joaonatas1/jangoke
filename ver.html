@@ -100,7 +100,7 @@ function desenhar(db) {
 onSnapshot(DOC, snap => {
   const db = normalize(snap.exists() ? snap.data().dados : null);
   desenhar(db);
-  document.getElementById('status').textContent = 'Atualiza sozinho';
+  document.getElementById('status').textContent = '';
 }, () => {
   document.getElementById('status').textContent = 'Não consegui carregar agora. Tente de novo em instantes.';
 });
