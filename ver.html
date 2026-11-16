@@ -13,6 +13,10 @@
   h2 { font-size: 18px; color: #e6f7ec; border-bottom: 1px solid #0a1d13; padding-bottom: 6px; margin: 26px 0 12px; }
   .card { background: #030a06; border: 1px solid #0a1d13; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
   .card.first { border-color: #1e8f4e; }
+  .card.ultimo { border-color: #ff4d4d; }
+  .linha { font-size: 17px; padding: 8px 4px; border-bottom: 1px solid #0a1d13; }
+  .linha .n { color: #9cc7ad; margin-right: 6px; }
+  .linha .cod { color: #ffd33d; font-weight: bold; float: right; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .nome { font-size: 20px; font-weight: bold; word-break: break-word; }
   .info { font-size: 14px; color: #9cc7ad; margin-top: 4px; }
@@ -85,15 +89,23 @@ function cantou(db, id) {
 
 function desenhar(db) {
   const fila = ordenarFila(db);
+  // Fila: só o 1º e o último ficam em destaque; os demais aparecem como texto simples
+  const ultimoFila = fila.length - 1;
   document.getElementById('fila').innerHTML = fila.length ? fila.map((q, i) => {
+    const nome = esc(nomeDe(db, q.clientId));
     const mesa = mesaDe(db, q.clientId);
+    if (i !== 0 && i !== ultimoFila) {
+      const mesaTxt = mesa === 'sem-mesa' ? '' : ` · Mesa ${esc(mesa)}`;
+      return `<div class="linha"><span class="n">${i + 1}º</span>${nome}${mesaTxt}<span class="cod">${esc(q.song)}</span></div>`;
+    }
     const tagMesa = mesa === 'sem-mesa' ? '' : `<span class="tag">Mesa ${esc(mesa)}</span>`;
     const tagPalco = q.onStage ? '<span class="tag palco">NO PALCO</span>' : '';
     const tagAusente = q.absent ? '<span class="tag">AUSENTE</span>' : '';
-    return `<div class="card ${i === 0 ? 'first' : ''}">
+    const cls = i === 0 ? 'first' : 'ultimo';
+    return `<div class="card ${cls}">
       <div class="row">
         <div>
-          <div class="nome">${esc(nomeDe(db, q.clientId))}${tagMesa}${tagPalco}${tagAusente}</div>
+          <div class="nome">${nome}${tagMesa}${tagPalco}${tagAusente}</div>
           <div class="info">${cantou(db, q.clientId)} música(s) já cantada(s)</div>
         </div>
         <div class="code">${esc(q.song)}</div>
