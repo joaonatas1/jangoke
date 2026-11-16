@@ -155,6 +155,7 @@
     <div class="stack name-row">
       <input id="firstName" placeholder="Nome" autocomplete="off">
       <input id="lastName" placeholder="Sobrenome" autocomplete="off">
+      <input id="mesa" type="number" inputmode="numeric" min="1" placeholder="Mesa" autocomplete="off">
       <button id="btnAddClient">Cadastrar</button>
     </div>
     <p id="clientErr" class="err"></p>
@@ -378,21 +379,78 @@ function clientName(id) {
   return c ? c.name : '?';
 }
 
-// Regra 1: quem cantou menos vai na frente
-// Regra 2: quem cantou há mais tempo (ou nunca) vai na frente
+// Ordem da fila (nesta ordem de prioridade):
+// 1) quem está no palco;
+// 2) quem espera há 30 minutos ou mais (o mais antigo primeiro);
+// 3) a primeira pessoa de cada mesa que ainda não cantou;
+// 4) rodadas: entre quem tem a menor quantidade de músicas (com tolerância de 1),
+//    alterna as mesas: a mesa que cantou há mais tempo vai primeiro;
+// 5) ausentes, por último.
+const TEMPO_ESPERA_MS = 30 * 60 * 1000;
+const TOLERANCIA_MUSICAS = 1;
+
+function mesaOf(clientId) {
+  const c = db.clients.find(x => x.id === clientId);
+  return c && c.mesa ? String(c.mesa) : 'sem-mesa';
+}
+function mesaTag(clientId) {
+  const m = mesaOf(clientId);
+  return m === 'sem-mesa' ? '' : ' <span class="abs-tag">Mesa ' + esc(m) + '</span>';
+}
 function sortedQueue() {
-  return [...db.queue].sort((a, b) => {
-    const pa = a.onStage ? 0 : 1, pb = b.onStage ? 0 : 1;
-    if (pa !== pb) return pa - pb;
-    const aa = a.absent ? 1 : 0, ba = b.absent ? 1 : 0;
-    if (aa !== ba) return aa - ba;
-    if (aa) return (a.absentAt || 0) - (b.absentAt || 0);
-    const ca = songsSung(a.clientId), cb = songsSung(b.clientId);
-    if (ca !== cb) return ca - cb;
-    const la = lastSung(a.clientId), lb = lastSung(b.clientId);
-    if (la !== lb) return la - lb;
-    return a.addedAt - b.addedAt;
+  const now = Date.now();
+  const byEntry = (a, b) => a.addedAt - b.addedAt;
+  const out = [];
+
+  // Mesas que já tiveram alguém cantando
+  const mesasQueCantaram = new Set(db.performances.map(p => mesaOf(p.clientId)));
+  // Última vez que cada mesa cantou (0 = nunca); vai sendo atualizado conforme a ordem é montada
+  const mesaLast = {};
+  db.performances.forEach(p => {
+    const m = mesaOf(p.clientId);
+    mesaLast[m] = Math.max(mesaLast[m] || 0, p.at);
   });
+  let virtual = 1e15;
+  const place = q => { out.push(q); mesaLast[mesaOf(q.clientId)] = virtual++; };
+
+  const onStage = db.queue.filter(q => q.onStage);
+  const absent = db.queue.filter(q => q.absent && !q.onStage).sort((a, b) => (a.absentAt || 0) - (b.absentAt || 0));
+  let rest = db.queue.filter(q => !q.onStage && !q.absent);
+
+  onStage.forEach(place);
+
+  // 2) espera longa
+  const longWait = rest.filter(q => now - (q.waitSince || q.addedAt) >= TEMPO_ESPERA_MS).sort(byEntry);
+  longWait.forEach(place);
+  rest = rest.filter(q => !out.includes(q));
+
+  // 3) primeira pessoa de cada mesa nova
+  const novasVistas = new Set();
+  [...rest].sort(byEntry).forEach(q => {
+    const m = mesaOf(q.clientId);
+    if (!mesasQueCantaram.has(m) && !novasVistas.has(m)) { novasVistas.add(m); place(q); }
+  });
+  rest = rest.filter(q => !out.includes(q));
+
+  // 4) rodadas por quantidade de músicas, alternando as mesas
+  while (rest.length) {
+    const min = Math.min(...rest.map(q => songsSung(q.clientId)));
+    const band = rest.filter(q => songsSung(q.clientId) <= min + TOLERANCIA_MUSICAS).sort(byEntry);
+    while (band.length) {
+      let best = 0;
+      for (let i = 1; i < band.length; i++) {
+        const la = mesaLast[mesaOf(band[i].clientId)] || 0;
+        const lb = mesaLast[mesaOf(band[best].clientId)] || 0;
+        if (la < lb) best = i;
+      }
+      place(band.splice(best, 1)[0]);
+    }
+    rest = rest.filter(q => !out.includes(q));
+  }
+
+  // 5) ausentes
+  absent.forEach(q => out.push(q));
+  return out;
 }
 
 function fmtDate(ts) {
@@ -473,20 +531,22 @@ document.getElementById('editCancel').onclick = () => {
 document.getElementById('btnAddClient').onclick = () => {
   const first = document.getElementById('firstName').value.trim();
   const last = document.getElementById('lastName').value.trim();
+  const mesaVal = parseInt(document.getElementById('mesa').value, 10);
   const err = document.getElementById('clientErr');
   if (!first || !last) { err.textContent = 'Preencha nome e sobrenome'; return; }
+  if (!mesaVal || mesaVal < 1) { err.textContent = 'Informe o número da mesa'; return; }
   const name = first + ' ' + last;
   const same = db.clients.find(c => c.name.toLowerCase() === name.toLowerCase());
   if (same) {
-    askConfirm('Já existe um cadastrado com o nome "' + name + '". Cadastrar outra pessoa com esse nome?', () => doAddClient(name));
+    askConfirm('Já existe um cadastrado com o nome "' + name + '". Cadastrar outra pessoa com esse nome?', () => doAddClient(name, mesaVal));
     return;
   }
-  doAddClient(name);
+  doAddClient(name, mesaVal);
 };
-function doAddClient(name) {
+function doAddClient(name, mesa) {
   const newId = uid();
   snapshot('cadastro de ' + name);
-  db.clients.push({ id: newId, name });
+  db.clients.push({ id: newId, name, mesa });
   save();
   document.getElementById('firstName').value = '';
   document.getElementById('lastName').value = '';
@@ -773,7 +833,7 @@ function renderQueue() {
     }
     return `
     <div class="card ${isFirst ? 'first-up' : ''}">
-      <div class="item-title">${songsSung(it.clientId)}x ${esc(clientName(it.clientId))} — <span class="queue-code">${esc(it.song)}</span>${it.absent ? '<span class="abs-tag">AUSENTE</span>' : ''}</div>
+      <div class="item-title">${songsSung(it.clientId)}x ${esc(clientName(it.clientId))}${mesaTag(it.clientId)} — <span class="queue-code">${esc(it.song)}</span>${it.absent ? '<span class="abs-tag">AUSENTE</span>' : ''}</div>
       ${stageHtml}
       <div class="card-foot">
         ${openMenuId === it.id ? `<button class="mini" data-absent="${it.id}">${it.absent ? 'Voltou (presente)' : 'Ausente'}</button><button class="mini" data-editq="${it.id}">Editar código</button><button class="mini" data-delq="${it.id}" style="color:#ff6b6b">Remover da fila</button>` : ''}
@@ -800,7 +860,7 @@ function toggleAbsent(id) {
   if (!item) { render(); return; }
   const nm = clientName(item.clientId);
   snapshot((item.absent ? 'voltou: ' : 'ausente: ') + nm);
-  if (item.absent) { item.absent = false; delete item.absentAt; }
+  if (item.absent) { item.absent = false; delete item.absentAt; item.waitSince = Date.now(); }
   else {
     item.absent = true;
     item.absentAt = Date.now();
@@ -869,7 +929,7 @@ function renderClients() {
     const isOpen = openClientId === c.id;
     return `
     <div class="card ${isOpen ? 'open' : ''}">
-      <div class="item-title client-name" data-open="${c.id}">${esc(c.name)}</div>
+      <div class="item-title client-name" data-open="${c.id}">${esc(c.name)}${c.mesa ? ' <span class="small">· mesa ' + esc(c.mesa) + '</span>' : ''}</div>
       ${isOpen ? `<div class="add-row">
         <input id="song-${c.id}" inputmode="numeric" placeholder="CÓDIGO" autocomplete="off">
         <button data-add="${c.id}">Colocar na fila</button>
