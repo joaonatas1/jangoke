@@ -422,10 +422,25 @@ document.getElementById('pinInput').onkeydown = e => {
 
 // EDITAR (código na fila; nota no ranking)
 function openEdit(t) {
+  if (t.type === 'client') {
+    const c = db.clients.find(x => x.id === t.id);
+    if (!c) return;
+    editTarget = t;
+    document.getElementById('editLabel').textContent = 'Alterar mesa: ' + c.name;
+    document.getElementById('editCode').value = c.mesa || '';
+    document.getElementById('editCode').placeholder = 'Número da mesa';
+    document.getElementById('editCode').classList.remove('hidden');
+    document.getElementById('editScoreWrap').classList.add('hidden');
+    document.getElementById('editErr').textContent = '';
+    document.getElementById('editBox').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
   const isPerf = t.type === 'perf';
   const item = isPerf ? db.performances.find(p => p.id === t.id) : db.queue.find(q => q.id === t.id);
   if (!item) return;
   editTarget = t;
+  document.getElementById('editCode').placeholder = 'Código';
   document.getElementById('editLabel').textContent =
     (isPerf ? 'Alterar nota: ' : 'Alterar código: ') + clientName(item.clientId);
   document.getElementById('editCode').value = item.song;
@@ -442,7 +457,12 @@ document.getElementById('editCode').oninput = e => {
 document.getElementById('editSave').onclick = () => {
   const err = document.getElementById('editErr');
   const before = JSON.stringify(db);
-  if (editTarget.type === 'perf') {
+  if (editTarget.type === 'client') {
+    const mesaNova = parseInt(document.getElementById('editCode').value.replace(/\D/g, ''), 10);
+    if (!mesaNova || mesaNova < 1) { err.textContent = 'Informe o número da mesa'; return; }
+    const c = db.clients.find(x => x.id === editTarget.id);
+    if (c) c.mesa = mesaNova;
+  } else if (editTarget.type === 'perf') {
     const s = parseFloat(document.getElementById('editScore').value);
     if (isNaN(s) || s < 0 || s > 100) { err.textContent = 'Informe uma nota de 0 a 100'; return; }
     const p = db.performances.find(x => x.id === editTarget.id);
@@ -872,7 +892,8 @@ function renderClients() {
       ${isOpen ? `<div class="add-row">
         <input id="song-${c.id}" inputmode="numeric" placeholder="CÓDIGO" autocomplete="off">
         <button data-add="${c.id}">Colocar na fila</button>
-      </div>` : ''}
+      </div>
+      <button class="mini" data-editc="${c.id}">Alterar mesa</button>` : ''}
     </div>`;
   }).join('');
   el.querySelectorAll('input[id^="song-"]').forEach(inp => {
@@ -890,6 +911,12 @@ document.getElementById('clients').onclick = e => {
     if (openClientId) {
       setTimeout(() => { const f = document.getElementById('song-' + id); if (f) f.focus(); }, 50);
     }
+    return;
+  }
+  const editC = e.target.closest('[data-editc]');
+  if (editC) {
+    const id = editC.dataset.editc;
+    askPin(() => openEdit({ type: 'client', id }));
     return;
   }
   const add = e.target.closest('[data-add]');
