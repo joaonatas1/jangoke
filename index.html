@@ -237,6 +237,16 @@
       <button class="sec" id="confirmNo">Cancelar</button>
     </div>
   </div>
+  <div id="mesaBox" class="overlay hidden">
+    <div class="card stack" style="border-color:#0f5c33">
+      <div id="mesaName" class="item-title"></div>
+      <div class="small">Mesa atual: <b id="mesaAtual"></b></div>
+      <input id="mesaNova" type="text" inputmode="numeric" placeholder="Nova mesa" autocomplete="off" style="font-size:48px; text-align:center">
+      <button id="btnAlterarMesa">ALTERAR MESA</button>
+      <button class="sec" id="btnMesaCancel">Cancelar</button>
+      <p id="mesaErr" class="err"></p>
+    </div>
+  </div>
   <div id="toast" class="toast hidden"></div>
 
 <script type="module">
@@ -422,20 +432,6 @@ document.getElementById('pinInput').onkeydown = e => {
 
 // EDITAR (código na fila; nota no ranking)
 function openEdit(t) {
-  if (t.type === 'client') {
-    const c = db.clients.find(x => x.id === t.id);
-    if (!c) return;
-    editTarget = t;
-    document.getElementById('editLabel').textContent = 'Alterar mesa: ' + c.name;
-    document.getElementById('editCode').value = c.mesa || '';
-    document.getElementById('editCode').placeholder = 'Número da mesa';
-    document.getElementById('editCode').classList.remove('hidden');
-    document.getElementById('editScoreWrap').classList.add('hidden');
-    document.getElementById('editErr').textContent = '';
-    document.getElementById('editBox').classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return;
-  }
   const isPerf = t.type === 'perf';
   const item = isPerf ? db.performances.find(p => p.id === t.id) : db.queue.find(q => q.id === t.id);
   if (!item) return;
@@ -457,12 +453,7 @@ document.getElementById('editCode').oninput = e => {
 document.getElementById('editSave').onclick = () => {
   const err = document.getElementById('editErr');
   const before = JSON.stringify(db);
-  if (editTarget.type === 'client') {
-    const mesaNova = parseInt(document.getElementById('editCode').value.replace(/\D/g, ''), 10);
-    if (!mesaNova || mesaNova < 1) { err.textContent = 'Informe o número da mesa'; return; }
-    const c = db.clients.find(x => x.id === editTarget.id);
-    if (c) c.mesa = mesaNova;
-  } else if (editTarget.type === 'perf') {
+  if (editTarget.type === 'perf') {
     const s = parseFloat(document.getElementById('editScore').value);
     if (isNaN(s) || s < 0 || s > 100) { err.textContent = 'Informe uma nota de 0 a 100'; return; }
     const p = db.performances.find(x => x.id === editTarget.id);
@@ -482,6 +473,40 @@ document.getElementById('editSave').onclick = () => {
 document.getElementById('editCancel').onclick = () => {
   editTarget = null;
   document.getElementById('editBox').classList.add('hidden');
+};
+
+// ALTERAR MESA (popup)
+let mesaTargetId = null;
+function openMesaBox(clientId) {
+  const c = db.clients.find(x => x.id === clientId);
+  if (!c) return;
+  mesaTargetId = clientId;
+  document.getElementById('mesaName').textContent = c.name;
+  document.getElementById('mesaAtual').textContent = c.mesa || 'sem mesa';
+  const inp = document.getElementById('mesaNova');
+  inp.value = '';
+  document.getElementById('mesaErr').textContent = '';
+  document.getElementById('mesaBox').classList.remove('hidden');
+  setTimeout(() => inp.focus(), 100);
+}
+function closeMesaBox() {
+  mesaTargetId = null;
+  document.getElementById('mesaBox').classList.add('hidden');
+}
+document.getElementById('mesaNova').oninput = e => { e.target.value = e.target.value.replace(/\D/g, ''); };
+document.getElementById('mesaNova').onkeydown = e => { if (e.key === 'Enter') document.getElementById('btnAlterarMesa').click(); };
+document.getElementById('btnMesaCancel').onclick = closeMesaBox;
+document.getElementById('btnAlterarMesa').onclick = () => {
+  const err = document.getElementById('mesaErr');
+  const nova = parseInt(document.getElementById('mesaNova').value, 10);
+  if (!nova || nova < 1) { err.textContent = 'Informe o número da nova mesa'; return; }
+  const c = db.clients.find(x => x.id === mesaTargetId);
+  if (!c) { closeMesaBox(); return; }
+  snapshot('mesa de ' + c.name);
+  c.mesa = nova;
+  save();
+  closeMesaBox();
+  render();
 };
 
 // CADASTRAR CLIENTE
@@ -604,7 +629,7 @@ function busy() {
   const pinOpen = !document.getElementById('pinBox').classList.contains('hidden');
   const editOpen = !document.getElementById('editBox').classList.contains('hidden');
   const recentSave = Date.now() - lastLocalChange < 4000;
-  const confirmOpen = !document.getElementById('confirmBox').classList.contains('hidden');
+  const confirmOpen = !document.getElementById('confirmBox').classList.contains('hidden') || !document.getElementById('mesaBox').classList.contains('hidden');
   return typing || pinOpen || editOpen || confirmOpen || recentSave || !!stage || !!openClientId || !!pendingClientId || !!openMenuId;
 }
 async function refreshRemote() {
@@ -916,7 +941,7 @@ document.getElementById('clients').onclick = e => {
   const editC = e.target.closest('[data-editc]');
   if (editC) {
     const id = editC.dataset.editc;
-    openEdit({ type: 'client', id });
+    openMesaBox(id);
     return;
   }
   const add = e.target.closest('[data-add]');
