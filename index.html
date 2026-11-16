@@ -702,7 +702,7 @@ document.getElementById('queue').onclick = e => {
   if (edit) {
     const id = edit.dataset.editq;
     openMenuId = null;
-    askPin(() => openEdit({ type: 'queue', id }));
+    openEdit({ type: 'queue', id });
     return;
   }
   const menu = e.target.closest('[data-menu]');
@@ -916,7 +916,7 @@ document.getElementById('clients').onclick = e => {
   const editC = e.target.closest('[data-editc]');
   if (editC) {
     const id = editC.dataset.editc;
-    askPin(() => openEdit({ type: 'client', id }));
+    openEdit({ type: 'client', id });
     return;
   }
   const add = e.target.closest('[data-add]');
