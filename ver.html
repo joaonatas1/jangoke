@@ -113,7 +113,7 @@ function desenhar(db) {
     </div>`;
   }).join('') : '<p class="small">Fila vazia</p>';
 
-  // Ranking: 1º lugar no topo, menor nota logo abaixo, depois os demais
+  // Ranking: 1º no topo, menor nota logo abaixo; só esses dois ficam em destaque
   const rank = ordenarRanking(db);
   if (!rank.length) {
     document.getElementById('ranking').innerHTML = '<p class="small">Ninguém cantou ainda</p>';
@@ -124,15 +124,19 @@ function desenhar(db) {
     const menorNota = Math.min(...rank.map(p => p.score));
     document.getElementById('ranking').innerHTML = ordem.map(i => {
       const p = rank[i];
+      const nome = esc(nomeDe(db, p.clientId));
       const ehUltimo = rank.length > 1 && i === ultimo && p.score === menorNota;
-      const cls = ehUltimo ? 'rank-low' : (i === 0 ? 'rank-1' : '');
-      const pos = ehUltimo ? '' : (i === 0 ? '🥇' : (i + 1) + 'º');
-      const bg = i === 0 ? '<span class="bg-emoji bg-cold">👑✨</span>' : (ehUltimo ? '<span class="bg-emoji bg-cold">💩😂</span>' : '');
+      if (i !== 0 && !ehUltimo) {
+        return `<div class="linha"><span class="n">${i + 1}º</span>${nome}<span class="cod">${esc(p.score)}</span></div>`;
+      }
+      const cls = ehUltimo ? 'rank-low' : 'rank-1';
+      const bg = i === 0 ? '<span class="bg-emoji bg-cold">👑✨</span>' : '<span class="bg-emoji bg-cold">💩😂</span>';
+      const pos = ehUltimo ? '' : '🥇';
       return `<div class="card rank-card-x ${cls}">
         ${bg}
         <div class="row">
           <div class="pos">${pos}</div>
-          <div class="nome" style="flex:1">${esc(nomeDe(db, p.clientId))}</div>
+          <div class="nome" style="flex:1">${nome}</div>
           <div class="score">${esc(p.score)}</div>
         </div>
       </div>`;
