@@ -30,6 +30,10 @@
   .rank-low .pos, .rank-low .score { color: #ffd33d; }
   .rank-low .nome { font-size: 30px; }
   .rank-low .score { font-size: 60px; line-height: 1; }
+  .rank-card-x { position: relative; overflow: hidden; }
+  .rank-card-x > * { position: relative; z-index: 1; }
+  .bg-emoji { position: absolute !important; right: 4px; top: 50%; transform: translateY(-50%); font-size: 64px; opacity: 0.22; z-index: 0 !important; pointer-events: none; }
+  .bg-emoji.bg-cold { left: 50%; right: auto; font-size: 150px; transform: translate(-50%, -50%) rotate(12deg); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -109,7 +113,9 @@ function desenhar(db) {
       const ehUltimo = rank.length > 1 && i === ultimo && p.score === menorNota;
       const cls = ehUltimo ? 'rank-low' : (i === 0 ? 'rank-1' : '');
       const pos = ehUltimo ? '' : (i === 0 ? '🥇' : (i + 1) + 'º');
-      return `<div class="card ${cls}">
+      const bg = i === 0 ? '<span class="bg-emoji bg-cold">👑✨</span>' : (ehUltimo ? '<span class="bg-emoji bg-cold">💩😂</span>' : '');
+      return `<div class="card rank-card-x ${cls}">
+        ${bg}
         <div class="row">
           <div class="pos">${pos}</div>
           <div class="nome" style="flex:1">${esc(nomeDe(db, p.clientId))}</div>
