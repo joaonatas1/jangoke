@@ -89,6 +89,7 @@
     .name-row button { width: auto; }
   }
   .neon { text-align: center; font-family: "Bebas Neue", Impact, sans-serif; font-weight: normal; font-size: 64px; line-height: 1; letter-spacing: 4px; color: #fff; margin: 0 0 14px; text-shadow: 0 0 4px #fff, 0 0 10px #ff2d95, 0 0 22px #ff2d95, 0 0 38px #ff2d95, 0 0 56px #00f0ff; }
+  #mesaNova { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   #pendingSong { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos, .queue-code { color: #ffd33d !important; }
   .first-up { border-color: #1e8f4e; }
@@ -173,6 +174,18 @@
       </div>
     </div>
 
+    <!-- ALTERAR MESA: mesmo formato do cartão de música escolhida -->
+    <div id="mesaBox" class="card hidden" style="border-color:#0f5c33; margin-top:14px">
+      <div class="stack">
+        <div id="mesaName" class="item-title"></div>
+        <div class="small">Mesa atual: <b id="mesaAtual"></b></div>
+        <input id="mesaNova" type="text" inputmode="numeric" placeholder="Nova mesa" autocomplete="off">
+        <button id="btnAlterarMesa">ALTERAR MESA</button>
+        <button class="sec" id="btnMesaCancel">Cancelar</button>
+        <p id="mesaErr" class="err"></p>
+      </div>
+    </div>
+
     <h2 id="clientsToggle" style="cursor:pointer; user-select:none">Cadastrados <span id="clientsArrow">▼</span></h2>
     <input id="search" type="text" placeholder="Buscar cadastrado pelo nome..." autocomplete="off">
     <div id="clients" class="stack" style="margin-top:12px"></div>
@@ -235,16 +248,6 @@
       <div id="confirmMsg" class="item-title"></div>
       <button id="confirmOk">Sim, adicionar</button>
       <button class="sec" id="confirmNo">Cancelar</button>
-    </div>
-  </div>
-  <div id="mesaBox" class="overlay hidden">
-    <div class="card stack" style="border-color:#0f5c33">
-      <div id="mesaName" class="item-title"></div>
-      <div class="small">Mesa atual: <b id="mesaAtual"></b></div>
-      <input id="mesaNova" type="text" inputmode="numeric" placeholder="Nova mesa" autocomplete="off" style="font-size:48px; text-align:center">
-      <button id="btnAlterarMesa">ALTERAR MESA</button>
-      <button class="sec" id="btnMesaCancel">Cancelar</button>
-      <p id="mesaErr" class="err"></p>
     </div>
   </div>
   <div id="toast" class="toast hidden"></div>
@@ -487,6 +490,8 @@ function openMesaBox(clientId) {
   inp.value = '';
   document.getElementById('mesaErr').textContent = '';
   document.getElementById('mesaBox').classList.remove('hidden');
+  fitCodeFont(inp, 128);
+  document.getElementById('mesaBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
   setTimeout(() => inp.focus(), 100);
 }
 function closeMesaBox() {
