@@ -722,7 +722,14 @@ document.getElementById('dock').onclick = e => {
     const first = sortedQueue()[0];
     if (!first) return;
     const s = stage && stage.id === first.id ? stage.step : null;
-    if (s === 'nota') { saveStageScore(first.id); return; }
+    if (s === 'nota') {
+      const inp = document.getElementById('stageScore');
+      if (inp && inp.value.trim()) { saveStageScore(first.id); return; }
+      // sem nota digitada: leva para o campo da nota na aba FILA
+      setTab('fila');
+      if (inp) { inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => inp.focus(), 150); }
+      return;
+    }
     stage = { id: first.id, step: s === 'palco' ? 'nota' : 'palco' };
     if (!s) markOnStage(first.id);
     renderQueue();
