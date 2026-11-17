@@ -13,8 +13,8 @@ export function mesaDe(db, clientId) {
 
 // Ordem da fila (nesta ordem de prioridade):
 // 1) quem está no palco;
-// 2) quem espera há 30 minutos ou mais (o mais antigo primeiro);
-// 3) a primeira pessoa de cada mesa que ainda não cantou;
+// 2) a primeira pessoa de cada mesa que ainda não cantou;
+// 3) quem espera há 30 minutos ou mais (o mais antigo primeiro);
 // 4) rodadas: entre quem tem a menor quantidade de músicas (com tolerância de 1),
 //    alterna as mesas: a mesa que cantou há mais tempo vai primeiro;
 // 5) ausentes, por último.
@@ -39,17 +39,17 @@ export function ordenarFila(db, now = Date.now()) {
 
   onStage.forEach(place);
 
-  // 2) espera longa
-  const longWait = rest.filter(q => now - (q.waitSince || q.addedAt) >= TEMPO_ESPERA_MS).sort(byEntry);
-  longWait.forEach(place);
-  rest = rest.filter(q => !out.includes(q));
-
-  // 3) primeira pessoa de cada mesa nova
+  // 2) primeira pessoa de cada mesa nova (mesa que ainda não cantou)
   const novasVistas = new Set();
   [...rest].sort(byEntry).forEach(q => {
     const m = mesaDe(db, q.clientId);
     if (!mesasQueCantaram.has(m) && !novasVistas.has(m)) { novasVistas.add(m); place(q); }
   });
+  rest = rest.filter(q => !out.includes(q));
+
+  // 3) espera longa
+  const longWait = rest.filter(q => now - (q.waitSince || q.addedAt) >= TEMPO_ESPERA_MS).sort(byEntry);
+  longWait.forEach(place);
   rest = rest.filter(q => !out.includes(q));
 
   // 4) rodadas por quantidade de músicas, alternando as mesas
