@@ -222,10 +222,6 @@
 
 
 
-    <h2>Virar a noite</h2>
-    <button class="sec" id="btnNight">Virar a noite</button>
-    <p class="small" style="margin-top:6px">Zera a fila e o ranking da noite e guarda as notas em "Noites anteriores", no ranking. Os cadastrados continuam.</p>
-
     <h2>Zerar dados</h2>
     <button class="sec" id="btnReset">Apagar fila, cadastrados e ranking</button>
 
@@ -1070,23 +1066,6 @@ document.getElementById('btnImport').onclick = () => {
   document.getElementById('importText').value = '';
   msg.textContent = `Importado: ${qCount} na fila, ${rCount} no ranking, ${newClients} novos cadastros.`;
   render();
-};
-
-// VIRAR A NOITE (exige PIN): arquiva as notas, zera a fila; cadastrados continuam
-document.getElementById('btnNight').onclick = () => {
-  askPin(() => {
-    snapshot('virar a noite');
-    if (db.performances.length) db.nights.push({ id: uid(), at: Date.now(), performances: db.performances });
-    db.performances = [];
-    db.queue = [];
-    stage = null;
-    openMenuId = null;
-    currentQueueId = null;
-    persistStage();
-    save();
-    render();
-    showToast('Noite arquivada. Fila e ranking zerados.');
-  });
 };
 
 // ZERAR TUDO (exige PIN)
