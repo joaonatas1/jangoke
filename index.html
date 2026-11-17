@@ -39,6 +39,9 @@
   .small { font-size: 13px; color: #9cc7ad; line-height: 1.4; }
   .err { color: #ff6b6b; font-size: 14px; margin: 6px 0 0; }
   .hidden { display: none !important; }
+  .tabs { display: flex; gap: 8px; margin: 12px 0 4px; }
+  .tabs button { flex: 1; min-height: 52px; font-size: 18px; font-weight: bold; background: #0a1d13; color: #9cc7ad; border: 1px solid #0f5c33; }
+  .tabs button.ativa { background: #17703d; color: #fff; }
   .add-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
   .add-row input[id^="song-"] { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   .queue-code { font-size: 30px; font-weight: bold; color: #0f5c33; letter-spacing: 1px; }
@@ -154,7 +157,9 @@
     <div class="title-row"><h1 class="neon">JANGOKÊ</h1><button class="rank-btn hidden" id="btnBack">← PAINEL</button></div>
     <div id="stagePanel" class="card"></div>
     <p id="status">Carregando...</p>
+    <div id="tabs" class="tabs"><button id="tabBtnCantor">NOME DO CANTOR</button><button id="tabBtnFila">FILA</button></div>
 
+    <div id="tabCantor" class="tab">
     <h2>NOME DO CANTOR</h2>
     <div class="stack name-row">
       <input id="firstName" placeholder="Nome" autocomplete="off">
@@ -191,6 +196,8 @@
     <input id="search" type="text" placeholder="Buscar cadastrado pelo nome..." autocomplete="off">
     <div id="clients" class="stack" style="margin-top:12px"></div>
 
+    </div>
+
     <!-- Tela de nota -->
     <div id="current" class="card hidden">
       <div class="stack">
@@ -216,9 +223,11 @@
       </div>
     </div>
 
+    <div id="tabFila" class="tab">
     <h2>Fila - quem vai cantar</h2>
     <input id="queueSearch" type="text" placeholder="Buscar na fila..." autocomplete="off" style="margin-bottom:10px">
     <div id="queue" class="stack"></div>
+    </div>
 
 
 
@@ -684,14 +693,27 @@ function renderDock() {
     <button data-dock="cadastrar">Cadastrar</button>
     <button class="dock-sq" data-dock="ranking" aria-label="Ranking">🏆</button>`;
 }
+// ABAS: NOME DO CANTOR (cadastro e cadastrados) e FILA (começar / no palco)
+function setTab(t) {
+  localStorage.setItem('karaoke-tab', t);
+  document.getElementById('tabCantor').classList.toggle('hidden', t !== 'cantor');
+  document.getElementById('tabFila').classList.toggle('hidden', t !== 'fila');
+  document.getElementById('tabBtnCantor').classList.toggle('ativa', t === 'cantor');
+  document.getElementById('tabBtnFila').classList.toggle('ativa', t === 'fila');
+}
+document.getElementById('tabBtnCantor').onclick = () => setTab('cantor');
+document.getElementById('tabBtnFila').onclick = () => setTab('fila');
+setTab(localStorage.getItem('karaoke-tab') === 'cantor' ? 'cantor' : 'fila');
+
 document.getElementById('dock').onclick = e => {
   const b = e.target.closest('[data-dock]');
   if (!b) return;
   const act = b.dataset.dock;
   if (act === 'painel') { setView(false); return; }
   if (act === 'ranking') { setView(true); return; }
-  if (act === 'fila') { document.getElementById('queueSearch').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (act === 'fila') { setTab('fila'); document.getElementById('queueSearch').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
   if (act === 'cadastrar') {
+    setTab('cantor');
     const f = document.getElementById('firstName');
     f.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => f.focus(), 300);
