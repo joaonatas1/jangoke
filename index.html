@@ -40,6 +40,7 @@
   .err { color: #ff6b6b; font-size: 14px; margin: 6px 0 0; }
   .hidden { display: none !important; }
   .add-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .add-row input[id^="song-"] { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   .queue-code { font-size: 30px; font-weight: bold; color: #0f5c33; letter-spacing: 1px; }
   #status { font-size: 12px; color: #7fae92; margin: 0 0 10px; }
 
@@ -933,7 +934,8 @@ function renderClients() {
     </div>`;
   }).join('');
   el.querySelectorAll('input[id^="song-"]').forEach(inp => {
-    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, ''); };
+    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, ''); fitCodeFont(inp, 128); };
+    fitCodeFont(inp, 128);
   });
 }
 
