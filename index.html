@@ -191,6 +191,18 @@
       </div>
     </div>
 
+    <!-- ALTERAR NOME: mesmo formato do cartão de música escolhida -->
+    <div id="nomeBox" class="card hidden" style="border-color:#0f5c33; margin-top:14px">
+      <div class="stack">
+        <div id="nomeAtual" class="item-title"></div>
+        <input id="nomeNovo" placeholder="Nome" autocomplete="off">
+        <input id="sobrenomeNovo" placeholder="Sobrenome" autocomplete="off">
+        <button id="btnAlterarNome">ALTERAR NOME</button>
+        <button class="sec" id="btnNomeCancel">Cancelar</button>
+        <p id="nomeErr" class="err"></p>
+      </div>
+    </div>
+
     <h2 id="clientsToggle" style="cursor:pointer; user-select:none">Cadastrados <span id="clientsArrow">▼</span></h2>
     <input id="search" type="text" placeholder="Buscar cadastrado pelo nome..." autocomplete="off">
     <div id="clients" class="stack" style="margin-top:12px"></div>
@@ -488,6 +500,7 @@ let mesaTargetId = null;
 function openMesaBox(clientId) {
   const c = db.clients.find(x => x.id === clientId);
   if (!c) return;
+  closeNomeBox();
   mesaTargetId = clientId;
   document.getElementById('mesaName').textContent = c.name;
   document.getElementById('mesaAtual').textContent = c.mesa || 'sem mesa';
@@ -503,6 +516,42 @@ function closeMesaBox() {
   mesaTargetId = null;
   document.getElementById('mesaBox').classList.add('hidden');
 }
+// ALTERAR NOME (cartão)
+let nomeTargetId = null;
+function openNomeBox(clientId) {
+  const c = db.clients.find(x => x.id === clientId);
+  if (!c) return;
+  closeMesaBox();
+  nomeTargetId = clientId;
+  const partes = c.name.trim().split(/\s+/);
+  document.getElementById('nomeAtual').textContent = 'Nome atual: ' + c.name;
+  document.getElementById('nomeNovo').value = partes[0] || '';
+  document.getElementById('sobrenomeNovo').value = partes.slice(1).join(' ');
+  document.getElementById('nomeErr').textContent = '';
+  document.getElementById('nomeBox').classList.remove('hidden');
+  document.getElementById('nomeBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => document.getElementById('nomeNovo').focus(), 100);
+}
+function closeNomeBox() {
+  nomeTargetId = null;
+  document.getElementById('nomeBox').classList.add('hidden');
+}
+document.getElementById('btnNomeCancel').onclick = closeNomeBox;
+document.getElementById('sobrenomeNovo').onkeydown = e => { if (e.key === 'Enter') document.getElementById('btnAlterarNome').click(); };
+document.getElementById('btnAlterarNome').onclick = () => {
+  const err = document.getElementById('nomeErr');
+  const first = document.getElementById('nomeNovo').value.trim();
+  const last = document.getElementById('sobrenomeNovo').value.trim();
+  if (!first || !last) { err.textContent = 'Preencha nome e sobrenome'; return; }
+  const c = db.clients.find(x => x.id === nomeTargetId);
+  if (!c) { closeNomeBox(); return; }
+  const antes = c.name;
+  snapshot('nome de ' + antes);
+  c.name = first + ' ' + last;
+  save();
+  closeNomeBox();
+  render();
+};
 document.getElementById('mesaNova').oninput = e => { e.target.value = e.target.value.replace(/\D/g, ''); };
 document.getElementById('mesaNova').onkeydown = e => { if (e.key === 'Enter') document.getElementById('btnAlterarMesa').click(); };
 document.getElementById('btnMesaCancel').onclick = closeMesaBox;
@@ -639,7 +688,7 @@ function busy() {
   const pinOpen = !document.getElementById('pinBox').classList.contains('hidden');
   const editOpen = !document.getElementById('editBox').classList.contains('hidden');
   const recentSave = Date.now() - lastLocalChange < 4000;
-  const confirmOpen = !document.getElementById('confirmBox').classList.contains('hidden') || !document.getElementById('mesaBox').classList.contains('hidden');
+  const confirmOpen = !document.getElementById('confirmBox').classList.contains('hidden') || !document.getElementById('mesaBox').classList.contains('hidden') || !document.getElementById('nomeBox').classList.contains('hidden');
   return typing || pinOpen || editOpen || confirmOpen || recentSave || !!stage || !!openClientId || !!pendingClientId || !!openMenuId;
 }
 async function refreshRemote() {
@@ -954,7 +1003,7 @@ function renderClients() {
         <input id="song-${c.id}" inputmode="numeric" placeholder="CÓDIGO" autocomplete="off">
         <button data-add="${c.id}">Colocar na fila</button>
       </div>
-      <button class="mini" data-editc="${c.id}">Alterar mesa</button>` : ''}
+      <button class="mini" data-editc="${c.id}">Alterar mesa</button> <button class="mini" data-editn="${c.id}">Alterar nome</button>` : ''}
     </div>`;
   }).join('');
   el.querySelectorAll('input[id^="song-"]').forEach(inp => {
@@ -975,6 +1024,8 @@ document.getElementById('clients').onclick = e => {
     }
     return;
   }
+  const editN = e.target.closest('[data-editn]');
+  if (editN) { openNomeBox(editN.dataset.editn); return; }
   const editC = e.target.closest('[data-editc]');
   if (editC) {
     const id = editC.dataset.editc;
