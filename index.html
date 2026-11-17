@@ -39,6 +39,19 @@
   .small { font-size: 13px; color: #9cc7ad; line-height: 1.4; }
   .err { color: #ff6b6b; font-size: 14px; margin: 6px 0 0; }
   .hidden { display: none !important; }
+  #scanFx { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); z-index: 85; pointer-events: none; }
+  #scanFx .scan-wrap { display: flex; flex-direction: column; align-items: center; }
+  #scanFx .scan-btn { position: relative; width: 120px; height: 120px; border-radius: 50%; border: 2px solid #0f5c33; background: #0a1d13; display: flex; align-items: center; justify-content: center; }
+  #scanFx .scan-btn svg { width: 72px; height: 72px; color: #ffd33d; animation: scanPulse 0.6s ease-in-out infinite; }
+  #scanFx .scan-ring { position: absolute; inset: -2px; border-radius: 50%; border: 2px solid #ffd33d; animation: scanPing 1s cubic-bezier(0,0,0.2,1) infinite; }
+  #scanFx .scan-dots { margin-top: 26px; }
+  #scanFx .scan-dots span { display: inline-block; width: 7px; height: 7px; margin: 0 4px; border-radius: 50%; background: #ffd33d; animation: scanBounce 0.9s infinite; }
+  #scanFx .scan-dots span:nth-child(2) { animation-delay: 0.15s; }
+  #scanFx .scan-dots span:nth-child(3) { animation-delay: 0.3s; }
+  #scanTxt { margin-top: 14px; font-size: 20px; font-weight: bold; color: #e6f7ec; text-shadow: 0 0 6px #000; }
+  @keyframes scanPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes scanPing { 75%, 100% { transform: scale(1.6); opacity: 0; } }
+  @keyframes scanBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
   .tabs { display: flex; gap: 8px; margin: 12px 0 4px; }
   .tabs button { flex: 1; min-height: 52px; font-size: 18px; font-weight: bold; background: #0a1d13; color: #9cc7ad; border: 1px solid #0f5c33; }
   .tabs button.ativa { background: #17703d; color: #fff; }
@@ -265,6 +278,26 @@
       <div id="confirmMsg" class="item-title"></div>
       <button id="confirmOk">Sim, adicionar</button>
       <button class="sec" id="confirmNo">Cancelar</button>
+    </div>
+  </div>
+  <div id="scanFx" class="hidden">
+    <div class="scan-wrap">
+      <div class="scan-btn">
+        <span class="scan-ring"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
+          <path d="M14 13.12c0 2.38 0 6.38-1 8.88"/>
+          <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/>
+          <path d="M2 12a10 10 0 0 1 18-6"/>
+          <path d="M2 16h.01"/>
+          <path d="M21.8 16c.2-2 .131-5.354 0-6"/>
+          <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/>
+          <path d="M8.65 22c.21-.66.45-1.32.57-2"/>
+          <path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>
+        </svg>
+      </div>
+      <div class="scan-dots"><span></span><span></span><span></span></div>
+      <div id="scanTxt"></div>
     </div>
   </div>
   <div id="toast" class="toast hidden"></div>
@@ -780,7 +813,7 @@ document.getElementById('dock').onclick = e => {
       return;
     }
     stage = { id: first.id, step: s === 'palco' ? 'nota' : 'palco' };
-    if (!s) markOnStage(first.id);
+    if (!s) { markOnStage(first.id); scanAnim('Lendo digital...'); }
     renderQueue();
     renderDock();
   }
@@ -814,7 +847,7 @@ document.getElementById('queue').onclick = e => {
   const abs = e.target.closest('[data-absent]');
   if (abs) { toggleAbsent(abs.dataset.absent); return; }
   const palco = e.target.closest('[data-palco]');
-  if (palco) { stage = { id: palco.dataset.palco, step: 'palco' }; markOnStage(stage.id); renderQueue(); return; }
+  if (palco) { stage = { id: palco.dataset.palco, step: 'palco' }; markOnStage(stage.id); scanAnim('Lendo digital...'); renderQueue(); return; }
   const nota = e.target.closest('[data-nota]');
   if (nota) { stage = { id: nota.dataset.nota, step: 'nota' }; renderQueue(); return; }
   const sv = e.target.closest('[data-save]');
@@ -855,6 +888,15 @@ function renderPending() {
   box.classList.remove('hidden');
   document.getElementById('pendingName').textContent = c.name;
   fitCodeFont(document.getElementById('pendingSong'), 128);
+}
+
+// ANIMAÇÃO DE DIGITAL (ao COMEÇAR e ao SALVAR NOTA): não bloqueia a tela
+let scanTimer = null;
+function scanAnim(texto) {
+  document.getElementById('scanTxt').textContent = texto;
+  document.getElementById('scanFx').classList.remove('hidden');
+  clearTimeout(scanTimer);
+  scanTimer = setTimeout(() => document.getElementById('scanFx').classList.add('hidden'), 2000);
 }
 
 let toastTimer = null;
@@ -935,6 +977,7 @@ function toggleAbsent(id) {
 }
 
 function saveStageScore(id) {
+  scanAnim('Salvando nota...');
   const err = document.getElementById('stageErr');
   const s = parseFloat(document.getElementById('stageScore').value);
   if (isNaN(s) || s < 0 || s > 100) { err.textContent = 'Informe uma nota de 0 a 100'; return; }
