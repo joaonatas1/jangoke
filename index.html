@@ -41,13 +41,13 @@
   .hidden { display: none !important; }
   #scanFx { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); z-index: 85; pointer-events: none; }
   #scanFx .scan-wrap { display: flex; flex-direction: column; align-items: center; }
-  #scanFx .scan-btn { position: relative; width: 120px; height: 120px; border-radius: 50%; border: 2px solid #0f5c33; background: #0a1d13; display: flex; align-items: center; justify-content: center; }
-  #scanFx .scan-btn svg { width: 72px; height: 72px; color: #ffd33d; animation: scanPulse 0.6s ease-in-out infinite; }
-  #scanFx .scan-ring { position: absolute; inset: -2px; border-radius: 50%; border: 2px solid #ffd33d; animation: scanPing 1s cubic-bezier(0,0,0.2,1) infinite; }
+  #scanFx .scan-btn { position: relative; width: 120px; height: 120px; border-radius: 50%; border: 2px solid #1e8f4e; background: #0a1d13; display: flex; align-items: center; justify-content: center; }
+  #scanFx .scan-btn svg { width: 72px; height: 72px; color: #2fd17a; animation: scanPulse 0.3s ease-in-out infinite; }
+  #scanFx .scan-ring { position: absolute; inset: -2px; border-radius: 50%; border: 2px solid #2fd17a; animation: scanPing 0.5s cubic-bezier(0,0,0.2,1) infinite; }
   #scanFx .scan-dots { margin-top: 26px; }
-  #scanFx .scan-dots span { display: inline-block; width: 7px; height: 7px; margin: 0 4px; border-radius: 50%; background: #ffd33d; animation: scanBounce 0.9s infinite; }
-  #scanFx .scan-dots span:nth-child(2) { animation-delay: 0.15s; }
-  #scanFx .scan-dots span:nth-child(3) { animation-delay: 0.3s; }
+  #scanFx .scan-dots span { display: inline-block; width: 7px; height: 7px; margin: 0 4px; border-radius: 50%; background: #2fd17a; animation: scanBounce 0.45s infinite; }
+  #scanFx .scan-dots span:nth-child(2) { animation-delay: 0.075s; }
+  #scanFx .scan-dots span:nth-child(3) { animation-delay: 0.15s; }
   #scanTxt { margin-top: 14px; font-size: 20px; font-weight: bold; color: #e6f7ec; text-shadow: 0 0 6px #000; }
   @keyframes scanPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   @keyframes scanPing { 75%, 100% { transform: scale(1.6); opacity: 0; } }
@@ -284,17 +284,7 @@
     <div class="scan-wrap">
       <div class="scan-btn">
         <span class="scan-ring"></span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
-          <path d="M14 13.12c0 2.38 0 6.38-1 8.88"/>
-          <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/>
-          <path d="M2 12a10 10 0 0 1 18-6"/>
-          <path d="M2 16h.01"/>
-          <path d="M21.8 16c.2-2 .131-5.354 0-6"/>
-          <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/>
-          <path d="M8.65 22c.21-.66.45-1.32.57-2"/>
-          <path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
       </div>
       <div class="scan-dots"><span></span><span></span><span></span></div>
       <div id="scanTxt"></div>
@@ -896,7 +886,7 @@ function scanAnim(texto) {
   document.getElementById('scanTxt').textContent = texto;
   document.getElementById('scanFx').classList.remove('hidden');
   clearTimeout(scanTimer);
-  scanTimer = setTimeout(() => document.getElementById('scanFx').classList.add('hidden'), 2000);
+  scanTimer = setTimeout(() => document.getElementById('scanFx').classList.add('hidden'), 1000);
 }
 
 let toastTimer = null;
