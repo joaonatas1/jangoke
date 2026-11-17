@@ -42,12 +42,12 @@
   #scanFx { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); z-index: 85; pointer-events: none; }
   #scanFx .scan-wrap { display: flex; flex-direction: column; align-items: center; }
   #scanFx .scan-btn { position: relative; width: 120px; height: 120px; border-radius: 50%; border: 2px solid #1e8f4e; background: #0a1d13; display: flex; align-items: center; justify-content: center; }
-  #scanFx .scan-btn svg { width: 72px; height: 72px; color: #2fd17a; animation: scanPulse 0.3s ease-in-out infinite; }
-  #scanFx .scan-ring { position: absolute; inset: -2px; border-radius: 50%; border: 2px solid #2fd17a; animation: scanPing 0.5s cubic-bezier(0,0,0.2,1) infinite; }
+  #scanFx .scan-btn svg { width: 72px; height: 72px; color: #2fd17a; animation: scanPulse 0.15s ease-in-out infinite; }
+  #scanFx .scan-ring { position: absolute; inset: -2px; border-radius: 50%; border: 2px solid #2fd17a; animation: scanPing 0.25s cubic-bezier(0,0,0.2,1) infinite; }
   #scanFx .scan-dots { margin-top: 26px; }
-  #scanFx .scan-dots span { display: inline-block; width: 7px; height: 7px; margin: 0 4px; border-radius: 50%; background: #2fd17a; animation: scanBounce 0.45s infinite; }
-  #scanFx .scan-dots span:nth-child(2) { animation-delay: 0.075s; }
-  #scanFx .scan-dots span:nth-child(3) { animation-delay: 0.15s; }
+  #scanFx .scan-dots span { display: inline-block; width: 7px; height: 7px; margin: 0 4px; border-radius: 50%; background: #2fd17a; animation: scanBounce 0.25s infinite; }
+  #scanFx .scan-dots span:nth-child(2) { animation-delay: 0.04s; }
+  #scanFx .scan-dots span:nth-child(3) { animation-delay: 0.08s; }
   #scanTxt { margin-top: 14px; font-size: 20px; font-weight: bold; color: #e6f7ec; text-shadow: 0 0 6px #000; }
   @keyframes scanPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   @keyframes scanPing { 75%, 100% { transform: scale(1.6); opacity: 0; } }
@@ -886,7 +886,7 @@ function scanAnim(texto) {
   document.getElementById('scanTxt').textContent = texto;
   document.getElementById('scanFx').classList.remove('hidden');
   clearTimeout(scanTimer);
-  scanTimer = setTimeout(() => document.getElementById('scanFx').classList.add('hidden'), 1000);
+  scanTimer = setTimeout(() => document.getElementById('scanFx').classList.add('hidden'), 500);
 }
 
 let toastTimer = null;
