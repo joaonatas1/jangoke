@@ -813,7 +813,7 @@ function renderQueue() {
     if (isFirst) {
       const s = stage && stage.id === it.id ? stage.step : null;
       if (s === 'nota') {
-        stageHtml = `<div class="score-row"><input id="stageScore" type="text" inputmode="numeric" placeholder="Nota" autocomplete="off"><button class="save-btn" data-save="${it.id}">SALVAR NOTA</button></div><p id="stageErr" class="err"></p>`;
+        stageHtml = ''; // a nota é digitada no painel de cima, ao lado do código
       } else if (s === 'palco') {
         stageHtml = `<button class="stage-btn palco" data-nota="${it.id}">NO PALCO</button>`;
       } else {
@@ -884,12 +884,18 @@ function renderStagePanel() {
   const next = full.find(x => !cur || x.id !== cur.id);
   const curHtml = cur
     ? `<div class="sp-label">NO PALCO</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>`
+      + (stage.step === 'nota' ? `<div class="score-row"><input id="stageScore" type="text" inputmode="numeric" placeholder="Nota" autocomplete="off"><button class="save-btn" data-save="${cur.id}">SALVAR NOTA</button></div><p id="stageErr" class="err"></p>` : '')
     : '';
   const nextHtml = next
     ? `<div class="sp-next">PRÓXIMO: <b>${esc(clientName(next.clientId))}</b> — <span class="queue-code">${esc(next.song)}</span></div>`
     : '';
   panel.innerHTML = curHtml + nextHtml;
 }
+
+document.getElementById('stagePanel').onclick = e => {
+  const sv = e.target.closest('[data-save]');
+  if (sv) { saveStageScore(sv.dataset.save); }
+};
 
 function renderCurrent() {
   const box = document.getElementById('current');
