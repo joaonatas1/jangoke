@@ -25,6 +25,7 @@
   .pos { font-size: 22px; font-weight: bold; color: #ffd33d; min-width: 44px; text-align: center; flex-shrink: 0; }
   .tag { display: inline-block; background: #9cc7ad; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .tag.palco { background: #ffd33d; }
+  .mesa-chip { display: inline-block; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
   .small { font-size: 13px; color: #7fae92; text-align: center; margin: 6px 0; }
   .rank-1 { border-color: #0f5c33; background: linear-gradient(90deg, #030f08, #030a06); padding: 16px 14px; }
   .rank-1 .pos { font-size: 36px; color: #ffd33d; }
@@ -56,7 +57,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { mesaDe, ordenarFila, ordenarRanking } from './fila.js';
+import { mesaDe, ordenarFila, ordenarRanking, corDaMesa } from './fila.js';
 
 const firebaseApp = initializeApp({
   apiKey: 'AIzaSyD13Y66-paZkQsmlXRm3QAhJfs-x_UFJRU',
@@ -95,10 +96,10 @@ function desenhar(db) {
     const nome = esc(nomeDe(db, q.clientId));
     const mesa = mesaDe(db, q.clientId);
     if (i !== 0 && i !== ultimoFila) {
-      const mesaTxt = mesa === 'sem-mesa' ? '' : ` · Mesa ${esc(mesa)}`;
+      const mesaTxt = mesa === 'sem-mesa' ? '' : ` <span class="mesa-chip" style="background:${corDaMesa(mesa)}">Mesa ${esc(mesa)}</span>`;
       return `<div class="linha"><span class="n">${i + 1}º</span>${nome}${mesaTxt}<span class="cod">${esc(q.song)}</span></div>`;
     }
-    const tagMesa = mesa === 'sem-mesa' ? '' : `<span class="tag">Mesa ${esc(mesa)}</span>`;
+    const tagMesa = mesa === 'sem-mesa' ? '' : `<span class="mesa-chip" style="background:${corDaMesa(mesa)}">Mesa ${esc(mesa)}</span>`;
     const tagPalco = q.onStage ? '<span class="tag palco">NO PALCO</span>' : '';
     const tagAusente = q.absent ? '<span class="tag">AUSENTE</span>' : '';
     const cls = i === 0 ? 'first' : 'ultimo';

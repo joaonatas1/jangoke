@@ -11,6 +11,15 @@ export function mesaDe(db, clientId) {
   return c && c.mesa ? String(c.mesa) : 'sem-mesa';
 }
 
+// Cor fixa para cada mesa (a mesma em todas as telas)
+const CORES_MESA = ['#3b82f6', '#a855f7', '#ec4899', '#f97316', '#14b8a6', '#6366f1', '#06b6d4', '#be185d'];
+export function corDaMesa(mesa) {
+  if (mesa === 'sem-mesa' || !mesa) return '#5b6b63';
+  let h = 0;
+  for (const ch of String(mesa)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return CORES_MESA[h % CORES_MESA.length];
+}
+
 // Ordem da fila:
 // 1) a primeira pessoa de cada mesa que ainda não cantou vem primeiro;
 // 2) o restante segue a ordem de chegada;
