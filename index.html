@@ -442,6 +442,11 @@ function mesaTag(clientId) {
 }
 // A ordem da fila está em fila.js
 function sortedQueue() { return ordenarFila(db); }
+// Quem a barra de baixo controla: quem está no palco ou, se ninguém, o primeiro da fila
+function alvoDock() {
+  const noPalco = stage && db.queue.find(q => q.id === stage.id);
+  return noPalco || sortedQueue()[0];
+}
 
 function fmtDate(ts) {
   return ts ? new Date(ts).toLocaleString('pt-BR') : 'nunca';
@@ -754,8 +759,9 @@ function renderDock() {
   const dock = document.getElementById('dock');
   const inRank = !document.getElementById('rankView').classList.contains('hidden');
   if (inRank) { dock.innerHTML = '<button data-dock="painel">← PAINEL</button>'; return; }
-  const first = sortedQueue()[0];
-  const s = first && stage && stage.id === first.id ? stage.step : null;
+  const alvo = alvoDock();
+  const s = alvo && stage && stage.id === alvo.id ? stage.step : null;
+  const first = alvo;
   const label = s === 'nota' ? 'SALVAR NOTA' : (s === 'palco' ? 'NO PALCO' : 'COMEÇAR');
   const cls = s === null ? 'dock-main dock-start' : 'dock-main';
   dock.innerHTML = `
@@ -791,7 +797,7 @@ document.getElementById('dock').onclick = e => {
     return;
   }
   if (act === 'stage') {
-    const first = sortedQueue()[0];
+    const first = alvoDock();
     if (!first) return;
     const s = stage && stage.id === first.id ? stage.step : null;
     if (s === 'nota') {
@@ -916,7 +922,7 @@ function renderQueue() {
   el.innerHTML = q.map(it => {
     const isFirst = first && it.id === first.id;
     let stageHtml = '';
-    if (isFirst) {
+    if (!it.absent) {
       const s = stage && stage.id === it.id ? stage.step : null;
       if (s === 'nota') {
         stageHtml = ''; // a nota é digitada no painel de cima, ao lado do código
