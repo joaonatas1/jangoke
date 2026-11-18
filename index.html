@@ -26,9 +26,10 @@
   input, textarea { width: 100%; font-size: 16px; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid #12301f; background: #04100a; color: #e6f7ec; outline: none; font-family: inherit; }
   textarea { min-height: 180px; resize: vertical; }
   input:focus, textarea:focus { border-color: #0f5c33; }
-  button { font-size: 16px; font-weight: bold; min-height: 48px; padding: 10px 16px; border-radius: 10px; border: none; background: #0f5c33; color: #111; cursor: pointer; width: 100%; }
+  button { font-size: 16px; font-weight: bold; min-height: 48px; padding: 10px 16px; border-radius: 10px; border: none; background: #17703d; color: #fff; cursor: pointer; width: 100%; }
   button:active { opacity: 0.8; }
-  button.sec { background: #0a1d13; color: #e6f7ec; }
+  button.sec { background: #0a1d13; color: #e6f7ec; border: 1px solid #0f5c33; }
+  button.perigo { background: #7f1d1d; color: #fff; }
   button.mini { width: auto; min-height: 44px; font-size: 16px; padding: 6px 12px; margin-top: 8px; background: #0a1d13; color: #0f5c33; }
 
   .stack { display: flex; flex-direction: column; gap: 10px; }
@@ -110,6 +111,11 @@
   #pendingSong { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos, .queue-code { color: #ffd33d !important; }
   .first-up { border-color: #1e8f4e; }
+  .passos { display: flex; gap: 6px; margin-bottom: 8px; }
+  .passos span { flex: 1; text-align: center; font-size: 13px; font-weight: bold; padding: 6px 4px; border-radius: 8px; background: #0a1d13; color: #7fae92; }
+  .passos span.passo.feito { color: #9cc7ad; }
+  .passos span.passo.ativo { background: #17703d; color: #fff; }
+  .dica { font-size: 15px; color: #cfe9d8; margin: 8px 0 0; }
   .stage-btn { width: 100%; min-height: 66px; font-size: 24px; margin-top: 10px; background: #1e8f4e; color: #fff; }
   .stage-btn.palco { background: #ffd33d; color: #111; }
   .score-row { display: flex; gap: 8px; margin-top: 10px; }
@@ -132,6 +138,7 @@
   .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: #ffd33d; color: #111; font-weight: bold; padding: 12px 18px; border-radius: 10px; z-index: 80; max-width: 90%; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .undo { position: fixed; left: 14px; bottom: 24px; width: auto; min-height: 44px; background: #0a1d13; color: #e6f7ec; border: 1px solid #0f5c33; z-index: 79; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .mesa-chip { display: inline-block; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+  .info-linha { margin-top: 4px; font-size: 14px; color: #9cc7ad; }
   .cnt { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 4px; }
   .cnt-zero { background: #39ff14; color: #04100a; }
   .cnt-um { background: #ffd33d; color: #111; }
@@ -182,7 +189,7 @@
     <div id="tabs" class="tabs"><button id="tabBtnFila">FILA</button><button id="tabBtnCantor">CADASTRO</button></div>
 
     <div id="tabCantor" class="tab">
-    <h2>NOME DO CANTOR</h2>
+    <h2>Novo cadastro</h2>
     <div class="stack name-row">
       <input id="firstName" placeholder="Nome" autocomplete="off">
       <input id="lastName" placeholder="Sobrenome" autocomplete="off">
@@ -196,7 +203,7 @@
       <div class="stack">
         <div id="pendingName" class="item-title"></div>
         <input id="pendingSong" type="text" inputmode="numeric" placeholder="Código" autocomplete="off">
-        <button id="btnPendingAdd">Colocar na fila</button>
+        <button id="btnPendingAdd">Adicionar à fila</button>
         <button class="sec" id="btnPendingLater">Depois</button>
         <p id="pendingErr" class="err"></p>
       </div>
@@ -259,7 +266,7 @@
 
     <div id="tabFila" class="tab">
       <div id="stagePanel" class="card"></div>
-    <h2>Fila - quem vai cantar</h2>
+    <h2>Fila</h2>
     <input id="queueSearch" type="text" placeholder="Buscar na fila..." autocomplete="off" style="margin-bottom:10px">
     <div id="queue" class="stack"></div>
     </div>
@@ -267,17 +274,21 @@
 
 
     <div id="rankView" class="hidden" style="margin-top:8px"><h2>RANKING</h2><div id="ranking"></div>
-    <h2>Zerar dados</h2>
-    <button class="sec" id="btnReset">Apagar fila, cadastrados e ranking</button>
-    <h2>Noites anteriores</h2>
-    <div id="nights" class="stack"></div>
-    <h2 id="importToggle" style="cursor:pointer; user-select:none">Importar lista <span id="importArrow">▼</span></h2>
-    <div id="importBox" class="card stack hidden">
-      <p class="small">Cole uma pessoa por linha: <b>Nome Sobrenome código</b>. Se houver uma linha só com a nota (0 a 100) logo abaixo, a pessoa entra no ranking. Sem nota, entra na fila.</p>
-      <textarea id="importText" placeholder="Daiane Sabino 2853&#10;79&#10;&#10;Ana carolina 17389"></textarea>
-      <button id="btnImport">Importar</button>
-      <p id="importMsg" class="small"></p>
-    </div>
+    <details class="card" style="margin-top:14px"><summary style="font-weight:bold; cursor:pointer;">Opções</summary>
+      <div class="stack" style="margin-top:12px">
+      <h2>Zerar dados</h2>
+      <button class="perigo" id="btnReset">Apagar fila, cadastrados e ranking</button>
+      <h2>Noites anteriores</h2>
+      <div id="nights" class="stack"></div>
+      <h2 id="importToggle" style="cursor:pointer; user-select:none">Importar lista <span id="importArrow">▼</span></h2>
+      <div id="importBox" class="card stack hidden">
+        <p class="small">Cole uma pessoa por linha: <b>Nome Sobrenome código</b>. Se houver uma linha só com a nota (0 a 100) logo abaixo, a pessoa entra no ranking. Sem nota, entra na fila.</p>
+        <textarea id="importText" placeholder="Daiane Sabino 2853&#10;79&#10;&#10;Ana carolina 17389"></textarea>
+        <button id="btnImport">Importar</button>
+        <p id="importMsg" class="small"></p>
+      </div>
+      </div>
+    </details>
     </div>
   </div>
 
@@ -949,7 +960,8 @@ function renderQueue() {
     }
     return `
     <div class="card ${isFirst ? 'first-up' : ''} ${stage && stage.id === it.id ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}">
-      <div class="item-title">${cntChip(it.clientId)} ${esc(clientName(it.clientId))}${mesaTag(it.clientId)} — <span class="queue-code">${esc(it.song)}</span>${it.absent ? '<span class="abs-tag ausente-tag">AUSENTE</span>' : ''}</div>
+      <div class="item-title">${esc(clientName(it.clientId))} — <span class="queue-code">${esc(it.song)}</span></div>
+      <div class="info-linha">${cntChip(it.clientId)}${mesaTag(it.clientId)}${it.absent ? '<span class="abs-tag ausente-tag">AUSENTE</span>' : ''}</div>
       ${stageHtml}
       <div class="card-foot">
         ${openMenuId === it.id ? `<button class="mini" data-absent="${it.id}">${it.absent ? 'Voltou (presente)' : 'Ausente'}</button><button class="mini" data-editq="${it.id}">Editar código</button><button class="mini" data-delq="${it.id}" style="color:#ff6b6b">Remover da fila</button>` : ''}
@@ -1014,7 +1026,16 @@ function renderStagePanel() {
     ? `<div class="sp-label">NO PALCO</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>`
       + (stage.step === 'nota' ? `<div class="score-row"><input id="stageScore" type="text" inputmode="numeric" placeholder="Nota" autocomplete="off"><button class="save-btn" data-save="${cur.id}">SALVAR NOTA</button></div><p id="stageErr" class="err"></p>` : '')
     : '';
-  panel.innerHTML = curHtml;
+  // Faixa de etapas: mostra onde você está
+  const passo = !cur ? 1 : (stage.step === 'nota' ? 3 : 2);
+  const marca = n => n === passo ? 'passo ativo' : (n < passo ? 'passo feito' : 'passo');
+  const dicas = {
+    1: 'Toque em <b>COMEÇAR</b> em quem vai cantar.',
+    2: 'Quando a pessoa terminar de cantar, toque em <b>NO PALCO</b> no cartão dela para anotar a nota.',
+    3: 'Digite a nota e toque em <b>SALVAR NOTA</b>.'
+  };
+  const faixa = `<div class="passos"><span class="${marca(1)}">1 · COMEÇAR</span><span class="${marca(2)}">2 · NO PALCO</span><span class="${marca(3)}">3 · Nota</span></div>`;
+  panel.innerHTML = faixa + curHtml + `<p class="dica">${dicas[passo]}</p>`;
 }
 
 document.getElementById('stagePanel').onclick = e => {
@@ -1053,8 +1074,8 @@ function renderClients() {
     <div class="card ${isOpen ? 'open' : ''}">
       <div class="item-title client-name" data-open="${c.id}">${esc(c.name)}${contagem[c.name.trim().toLowerCase()] > 1 ? ' <span class="repetido-tag">REPETIDO</span>' : ''}${c.mesa ? ' <span class="mesa-chip" style="background:' + corDaMesa(String(c.mesa)) + '">Mesa ' + esc(c.mesa) + '</span>' : ''}</div>
       ${isOpen ? `<div class="add-row">
-        <input id="song-${c.id}" inputmode="numeric" placeholder="CÓDIGO" autocomplete="off">
-        <button data-add="${c.id}">Colocar na fila</button>
+        <input id="song-${c.id}" inputmode="numeric" placeholder="Código" autocomplete="off">
+        <button data-add="${c.id}">Adicionar à fila</button>
       </div>
       <button class="mini" data-editc="${c.id}">Alterar mesa</button> <button class="mini" data-editn="${c.id}">Alterar nome</button> <button class="mini" data-delc="${c.id}" style="color:#ff6b6b">Remover cadastrado</button>` : ''}
     </div>`;
