@@ -11,6 +11,9 @@ export function mesaDe(db, clientId) {
   return c && c.mesa ? String(c.mesa) : 'sem-mesa';
 }
 
+// Faixa de músicas já cantadas (para a cor do número)
+export function faixaMusicas(n) { return n === 0 ? 'zero' : (n === 1 ? 'um' : 'mais'); }
+
 // Cor fixa para cada mesa (a mesma em todas as telas)
 const CORES_MESA = ['#3b82f6', '#a855f7', '#ec4899', '#f97316', '#14b8a6', '#6366f1', '#06b6d4', '#be185d'];
 export function corDaMesa(mesa) {

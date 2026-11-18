@@ -29,7 +29,7 @@
   button { font-size: 16px; font-weight: bold; min-height: 48px; padding: 10px 16px; border-radius: 10px; border: none; background: #0f5c33; color: #111; cursor: pointer; width: 100%; }
   button:active { opacity: 0.8; }
   button.sec { background: #0a1d13; color: #e6f7ec; }
-  button.mini { width: auto; min-height: 36px; font-size: 14px; padding: 6px 12px; margin-top: 8px; background: #0a1d13; color: #0f5c33; }
+  button.mini { width: auto; min-height: 44px; font-size: 16px; padding: 6px 12px; margin-top: 8px; background: #0a1d13; color: #0f5c33; }
 
   .stack { display: flex; flex-direction: column; gap: 10px; }
   .card { background: #030a06; border: 1px solid #0a1d13; border-radius: 12px; padding: 14px; }
@@ -110,11 +110,11 @@
   #pendingSong { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos, .queue-code { color: #ffd33d !important; }
   .first-up { border-color: #1e8f4e; }
-  .stage-btn { width: 100%; min-height: 56px; font-size: 20px; margin-top: 10px; background: #1e8f4e; color: #fff; }
+  .stage-btn { width: 100%; min-height: 66px; font-size: 24px; margin-top: 10px; background: #1e8f4e; color: #fff; }
   .stage-btn.palco { background: #ffd33d; color: #111; }
   .score-row { display: flex; gap: 8px; margin-top: 10px; }
   .score-row input { flex: 1; font-size: 24px; text-align: center; }
-  .save-btn { width: auto; min-height: 56px; background: #3b82f6; color: #fff; white-space: nowrap; }
+  .save-btn { width: auto; min-height: 66px; font-size: 22px; background: #3b82f6; color: #fff; white-space: nowrap; }
   .card.open { background: #8fe3ae; border-color: #8fe3ae; }
   .card.open .client-name { color: #04100a; }
   #stagePanel { position: sticky; top: 0; z-index: 4; border-color: #ffd33d; margin: 0 0 12px; }
@@ -127,11 +127,19 @@
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
   .overlay .card { width: 100%; max-width: 360px; border-color: #ffd33d; }
   .card-foot { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .dots { width: auto; min-height: 40px; padding: 4px 16px; font-size: 22px; line-height: 1; background: #0f2c1d; color: #e6f7ec; }
+  .dots { width: auto; min-height: 48px; padding: 4px 16px; font-size: 22px; line-height: 1; background: #0f2c1d; color: #e6f7ec; }
   .toast-nota { font-size: 32px; font-weight: bold; line-height: 1.2; }
   .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: #ffd33d; color: #111; font-weight: bold; padding: 12px 18px; border-radius: 10px; z-index: 80; max-width: 90%; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .undo { position: fixed; left: 14px; bottom: 24px; width: auto; min-height: 44px; background: #0a1d13; color: #e6f7ec; border: 1px solid #0f5c33; z-index: 79; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .mesa-chip { display: inline-block; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+  .cnt { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 4px; }
+  .cnt-zero { background: #39ff14; color: #04100a; }
+  .cnt-um { background: #ffd33d; color: #111; }
+  .cnt-mais { background: #5b6b63; color: #fff; }
+  .card.no-palco { border-color: #ffd33d; box-shadow: 0 0 12px rgba(255,211,61,0.35); }
+  .ausente-tag { background: #f97316 !important; color: #111 !important; }
+  .card.ausente-card { opacity: 0.6; }
+  .repetido-tag { display: inline-block; background: #f97316; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .abs-tag { display: inline-block; background: #9cc7ad; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   #firstName, #lastName, #mesa { text-align: center; }
   #mesa { -moz-appearance: textfield; appearance: textfield; }
@@ -143,7 +151,7 @@
   #nights .n-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid #0a1d13; font-size: 15px; }
   #app { padding-bottom: 90px; }
   #dock { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); background: #030a06; border-top: 1px solid #0f5c33; z-index: 40; }
-  #dock button { flex: 1; width: auto; min-height: 52px; font-size: 15px; padding: 6px 4px; white-space: nowrap; }
+  #dock button { flex: 1; width: auto; min-height: 62px; font-size: 17px; padding: 6px 4px; white-space: nowrap; }
   #dock button.dock-main { flex: 1.6; background: #ffd33d; color: #111; }
   #dock button.dock-save { background: #3b82f6; color: #fff; }
   #dock button.dock-start { background: #39ff14; color: #04100a; box-shadow: 0 0 6px #39ff14, 0 0 16px #39ff14; text-shadow: 0 0 4px rgba(255,255,255,0.6); }
@@ -297,7 +305,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { mesaDe, ordenarFila, corDaMesa } from './fila.js';
+import { mesaDe, ordenarFila, corDaMesa, faixaMusicas } from './fila.js';
 
 const PIN = '523';
 const KEY = 'karaoke-fila-v1';
@@ -351,8 +359,9 @@ function songWarning(song, dup) {
 
 // Caixa de confirmação dentro da página
 let confirmCb = null;
-function askConfirm(msg, cb) {
+function askConfirm(msg, cb, label = 'Sim, adicionar') {
   confirmCb = cb;
+  document.getElementById('confirmOk').textContent = label;
   document.getElementById('confirmMsg').textContent = msg;
   document.getElementById('confirmBox').classList.remove('hidden');
 }
@@ -444,6 +453,10 @@ function mesaTag(clientId) {
 }
 // A ordem da fila está em fila.js
 function sortedQueue() { return ordenarFila(db); }
+function cntChip(clientId) {
+  const n = songsSung(clientId);
+  return `<span class="cnt cnt-${faixaMusicas(n)}">${n}x</span>`;
+}
 // Quem a barra de baixo controla: quem está no palco ou, se ninguém, o primeiro da fila
 function alvoDock() {
   const noPalco = stage && db.queue.find(q => q.id === stage.id);
@@ -935,8 +948,8 @@ function renderQueue() {
       }
     }
     return `
-    <div class="card ${isFirst ? 'first-up' : ''}">
-      <div class="item-title">${songsSung(it.clientId)}x ${esc(clientName(it.clientId))}${mesaTag(it.clientId)} — <span class="queue-code">${esc(it.song)}</span>${it.absent ? '<span class="abs-tag">AUSENTE</span>' : ''}</div>
+    <div class="card ${isFirst ? 'first-up' : ''} ${stage && stage.id === it.id ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}">
+      <div class="item-title">${cntChip(it.clientId)} ${esc(clientName(it.clientId))}${mesaTag(it.clientId)} — <span class="queue-code">${esc(it.song)}</span>${it.absent ? '<span class="abs-tag ausente-tag">AUSENTE</span>' : ''}</div>
       ${stageHtml}
       <div class="card-foot">
         ${openMenuId === it.id ? `<button class="mini" data-absent="${it.id}">${it.absent ? 'Voltou (presente)' : 'Ausente'}</button><button class="mini" data-editq="${it.id}">Editar código</button><button class="mini" data-delq="${it.id}" style="color:#ff6b6b">Remover da fila</button>` : ''}
@@ -1032,16 +1045,18 @@ function renderClients() {
     .filter(c => c.name.toLowerCase().includes(term))
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   if (!list.length) { el.innerHTML = '<p class="small">Nenhum cadastrado encontrado</p>'; return; }
+  const contagem = {};
+  db.clients.forEach(c => { const k = c.name.trim().toLowerCase(); contagem[k] = (contagem[k] || 0) + 1; });
   el.innerHTML = list.map(c => {
     const isOpen = openClientId === c.id;
     return `
     <div class="card ${isOpen ? 'open' : ''}">
-      <div class="item-title client-name" data-open="${c.id}">${esc(c.name)}${c.mesa ? ' <span class="mesa-chip" style="background:' + corDaMesa(String(c.mesa)) + '">Mesa ' + esc(c.mesa) + '</span>' : ''}</div>
+      <div class="item-title client-name" data-open="${c.id}">${esc(c.name)}${contagem[c.name.trim().toLowerCase()] > 1 ? ' <span class="repetido-tag">REPETIDO</span>' : ''}${c.mesa ? ' <span class="mesa-chip" style="background:' + corDaMesa(String(c.mesa)) + '">Mesa ' + esc(c.mesa) + '</span>' : ''}</div>
       ${isOpen ? `<div class="add-row">
         <input id="song-${c.id}" inputmode="numeric" placeholder="CÓDIGO" autocomplete="off">
         <button data-add="${c.id}">Colocar na fila</button>
       </div>
-      <button class="mini" data-editc="${c.id}">Alterar mesa</button> <button class="mini" data-editn="${c.id}">Alterar nome</button>` : ''}
+      <button class="mini" data-editc="${c.id}">Alterar mesa</button> <button class="mini" data-editn="${c.id}">Alterar nome</button> <button class="mini" data-delc="${c.id}" style="color:#ff6b6b">Remover cadastrado</button>` : ''}
     </div>`;
   }).join('');
   el.querySelectorAll('input[id^="song-"]').forEach(inp => {
@@ -1060,6 +1075,27 @@ document.getElementById('clients').onclick = e => {
     if (openClientId) {
       setTimeout(() => { const f = document.getElementById('song-' + id); if (f) f.focus(); }, 50);
     }
+    return;
+  }
+  const delC = e.target.closest('[data-delc]');
+  if (delC) {
+    const id = delC.dataset.delc;
+    askPin(() => {
+      const c = db.clients.find(x => x.id === id);
+      if (!c) return;
+      const notas = db.performances.filter(p => p.clientId === id).length;
+      const itens = db.queue.filter(q => q.clientId === id).length;
+      askConfirm(`Remover "${c.name}"? Isso apaga ${notas} nota(s) e ${itens} item(ns) da fila dela.`, () => {
+        snapshot('remoção do cadastro de ' + c.name);
+        db.clients = db.clients.filter(x => x.id !== id);
+        db.queue = db.queue.filter(q => q.clientId !== id);
+        db.performances = db.performances.filter(p => p.clientId !== id);
+        if (stage && !db.queue.some(q => q.id === stage.id)) stage = null;
+        openClientId = null;
+        save();
+        render();
+      }, 'Sim, remover');
+    });
     return;
   }
   const editN = e.target.closest('[data-editn]');
