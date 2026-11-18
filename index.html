@@ -843,9 +843,9 @@ document.getElementById('queue').onclick = e => {
   const abs = e.target.closest('[data-absent]');
   if (abs) { toggleAbsent(abs.dataset.absent); return; }
   const palco = e.target.closest('[data-palco]');
-  if (palco) { stage = { id: palco.dataset.palco, step: 'palco' }; markOnStage(stage.id); scanAnim('Lendo digital...'); renderQueue(); return; }
+  if (palco) { stage = { id: palco.dataset.palco, step: 'palco' }; markOnStage(stage.id); scanAnim('Lendo digital...'); renderQueue(); renderDock(); return; }
   const nota = e.target.closest('[data-nota]');
-  if (nota) { stage = { id: nota.dataset.nota, step: 'nota' }; renderQueue(); return; }
+  if (nota) { stage = { id: nota.dataset.nota, step: 'nota' }; renderQueue(); renderDock(); return; }
   const sv = e.target.closest('[data-save]');
   if (sv) { saveStageScore(sv.dataset.save); return; }
 };
