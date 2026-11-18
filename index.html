@@ -999,10 +999,7 @@ function renderStagePanel() {
     ? `<div class="sp-label">NO PALCO</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>`
       + (stage.step === 'nota' ? `<div class="score-row"><input id="stageScore" type="text" inputmode="numeric" placeholder="Nota" autocomplete="off"><button class="save-btn" data-save="${cur.id}">SALVAR NOTA</button></div><p id="stageErr" class="err"></p>` : '')
     : '';
-  const nextHtml = next
-    ? `<div class="sp-next">PRÓXIMO: <b>${esc(clientName(next.clientId))}</b> — <span class="queue-code">${esc(next.song)}</span></div>`
-    : '';
-  panel.innerHTML = curHtml + nextHtml;
+  panel.innerHTML = curHtml;
 }
 
 document.getElementById('stagePanel').onclick = e => {
