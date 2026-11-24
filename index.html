@@ -365,7 +365,7 @@
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { mesaDe, ordenarFila, corDaMesa, faixaMusicas } from './fila.js';
 import { CATALOGO } from './catalogo.js';
 
@@ -449,7 +449,9 @@ function snapshot(label) {
 function undoLast() {
   const u = undoStack.pop();
   if (!u || Date.now() - u.at >= UNDO_MS) return;
-  db = normalize(JSON.parse(u.data));
+  // Desfaz só a sua ação: o que outros aparelhos fizeram nesse meio-tempo continua
+  const antes = normalize(JSON.parse(u.data));
+  db = u.depois ? mesclar(JSON.parse(u.depois), antes, db) : antes;
   if (stage && !db.queue.some(q => q.id === stage.id)) stage = null;
   openMenuId = null;
   save();
@@ -457,24 +459,88 @@ function undoLast() {
   showToast('Desfeito: ' + u.label);
 }
 
-// SALVAR: guarda neste aparelho e envia para a nuvem
+// JUNTAR (mesclar): cada aparelho envia só o que ELE mudou; nada que outro aparelho fez é apagado.
+// "base" = última versão que este aparelho recebeu da nuvem ou enviou para ela.
+let base = (() => { try { const b = localStorage.getItem('karaoke-base'); return b ? normalize(JSON.parse(b)) : null; } catch (e) { return null; } })();
+function setBase(d) {
+  base = normalize(JSON.parse(JSON.stringify(d)));
+  try { localStorage.setItem('karaoke-base', JSON.stringify(base)); } catch (e) { /* sem armazenamento */ }
+}
+function chave(it) { return it && it.id ? 'id:' + it.id : 'j:' + JSON.stringify(it); }
+function mesclarLista(b, l, r) {
+  const mapa = arr => new Map((arr || []).map(x => [chave(x), x]));
+  const B = mapa(b), L = mapa(l), R = mapa(r);
+  const out = [], visto = new Set();
+  for (const k of [...R.keys(), ...L.keys()]) {
+    if (visto.has(k)) continue;
+    visto.add(k);
+    if (!B.has(k)) { out.push(L.has(k) ? L.get(k) : R.get(k)); continue; } // novo aqui ou em outro aparelho
+    if (!L.has(k) || !R.has(k)) continue;                                   // apagado aqui ou em outro aparelho
+    const mudouAqui = JSON.stringify(L.get(k)) !== JSON.stringify(B.get(k));
+    out.push(mudouAqui ? L.get(k) : R.get(k));
+  }
+  return out;
+}
+function mesclar(b, l, r) {
+  b = normalize(b); l = normalize(l); r = normalize(r);
+  return {
+    clients: mesclarLista(b.clients, l.clients, r.clients),
+    queue: mesclarLista(b.queue, l.queue, r.queue),
+    performances: mesclarLista(b.performances, l.performances, r.performances),
+    nights: mesclarLista(b.nights, l.nights, r.nights)
+  };
+}
+let telaDesatualizada = false;
+function aplicarJuncao(novo) {
+  db = novo;
+  if (stage && !db.queue.some(q => q.id === stage.id)) stage = null;
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* sem armazenamento */ }
+  telaDesatualizada = true;
+}
+
+// SALVAR: guarda neste aparelho e envia para a nuvem, juntando com o que os outros aparelhos fizeram
 let lastLocalChange = 0;
+let enviando = false, enviarDeNovo = false;
 function save() {
   lastLocalChange = Date.now();
-  localStorage.setItem(KEY, JSON.stringify(db));
+  const u = undoStack[undoStack.length - 1];
+  if (u && !u.depois) u.depois = JSON.stringify(db);
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* sem armazenamento */ }
   pendingSync = true;
   localStorage.setItem('karaoke-pending', '1');
   setStatus('Salvando...');
-  setDoc(DOC, { dados: db })
-    .then(() => {
-      pendingSync = false;
-      localStorage.removeItem('karaoke-pending');
-      setStatus('Salvo na nuvem');
-    })
-    .catch(err => setStatus('Não enviou para a nuvem (' + (err && err.code || 'erro') + ': ' + (err && err.message || '') + '). Salvo neste aparelho, tentando de novo.'));
+  enviar();
+}
+async function enviar() {
+  if (enviando) { enviarDeNovo = true; return; }
+  enviando = true;
+  enviarDeNovo = false;
+  const baseUsada = base || normalize(null);
+  const local = JSON.parse(JSON.stringify(db));
+  try {
+    const final = await runTransaction(fdb, async tx => {
+      const snap = await tx.get(DOC);
+      const remoto = normalize(snap.exists() ? snap.data().dados : null);
+      const junto = mesclar(baseUsada, local, remoto);
+      tx.set(DOC, { dados: junto });
+      return junto;
+    });
+    // mantém também o que foi feito neste aparelho enquanto enviava
+    aplicarJuncao(mesclar(baseUsada, db, final));
+    setBase(final);
+    enviando = false;
+    if (enviarDeNovo || JSON.stringify(db) !== JSON.stringify(final)) { enviar(); return; }
+    pendingSync = false;
+    localStorage.removeItem('karaoke-pending');
+    setStatus('Salvo na nuvem');
+    if (!busy()) { telaDesatualizada = false; render(); }
+  } catch (err) {
+    enviando = false;
+    setStatus('Não enviou para a nuvem (' + (err && err.code || 'erro') + '). Salvo neste aparelho, tentando de novo.');
+  }
 }
 // Reenvia o que ficou pendente (ex.: Wi-Fi caiu)
-function flushPending() { if (pendingSync) save(); }
+function flushPending() { if (pendingSync) enviar(); }
 window.addEventListener('online', flushPending);
 
 // CARREGAR da nuvem
@@ -482,14 +548,19 @@ async function loadRemote() {
   try {
     const snap = await getDoc(DOC);
     const remote = normalize(snap.exists() ? snap.data().dados : null);
-    if (pendingSync || (isEmpty(remote) && !isEmpty(db))) {
-      // Tem alteração pendente deste aparelho, ou nuvem vazia com dados aqui: sobe os dados daqui
-      save();
+    if (base) {
+      // junta o que este aparelho tinha de pendente com o que está na nuvem
+      db = pendingSync ? mesclar(base, db, remote) : remote;
+    } else if (pendingSync || (isEmpty(remote) && !isEmpty(db))) {
+      db = mesclar(normalize(null), db, remote);
     } else {
       db = remote;
-      localStorage.setItem(KEY, JSON.stringify(db));
-      setStatus('Conectado');
     }
+    if (stage && !db.queue.some(q => q.id === stage.id)) stage = null;
+    localStorage.setItem(KEY, JSON.stringify(db));
+    setBase(remote);
+    if (JSON.stringify(db) !== JSON.stringify(remote)) save();
+    else { pendingSync = false; localStorage.removeItem('karaoke-pending'); setStatus('Conectado'); }
   } catch (e) {
     setStatus('Não carregou da nuvem (' + (e && e.name || 'erro') + ': ' + (e && e.message || e) + '). Mostrando os dados salvos neste aparelho.');
   }
@@ -854,16 +925,19 @@ function busy() {
   return typing || pinOpen || editOpen || confirmOpen || recentSave || !!stage || !!openClientId || !!pendingClientId || !!openMenuId || !!addMusicaItem;
 }
 async function refreshRemote() {
-  if (pendingSync) { save(); return; }
-  if (busy()) return;
+  if (enviando) return;
+  if (pendingSync) { enviar(); return; }
   try {
     const snap = await getDoc(DOC);
-    if (!snap.exists()) return;
+    if (!snap.exists() || enviando || pendingSync) return;
     const remote = normalize(snap.data().dados);
-    if (JSON.stringify(remote) === JSON.stringify(db) || busy()) return;
-    db = remote;
-    localStorage.setItem(KEY, JSON.stringify(db));
-    render();
+    if (!base || JSON.stringify(remote) !== JSON.stringify(base)) {
+      // Sempre recebe as novidades dos outros aparelhos, mesmo com alguém no palco ou digitando;
+      // só espera para redesenhar a tela.
+      aplicarJuncao(base ? mesclar(base, db, remote) : remote);
+      setBase(remote);
+    }
+    if (telaDesatualizada && !busy()) { telaDesatualizada = false; render(); }
   } catch (e) { /* sem internet: mantém o que está na tela */ }
 }
 setInterval(refreshRemote, 8000);
