@@ -61,6 +61,7 @@
   .add-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
   .add-row input[id^="song-"] { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   .queue-code { font-size: 30px; font-weight: bold; color: #0f5c33; letter-spacing: 1px; }
+  .song-nome-fila { font-size: 20px; font-weight: 700; color: #ffd33d; margin: 2px 0 6px; line-height: 1.2; }
   #status { font-size: 12px; color: #7fae92; margin: 0 0 10px; }
 
   /* Ranking */
@@ -719,6 +720,12 @@ function mostrarNome(elId, codigo) {
   if (el) el.textContent = nomeDaMusica(String(codigo || '').replace(/\D/g, ''));
 }
 
+// Nome da música logo abaixo do código, na fila e no palco
+function nomeMusicaHtml(codigo) {
+  const n = nomeDaMusica(String(codigo || ''));
+  return n ? `<div class="song-nome-fila">${esc(n)}</div>` : '';
+}
+
 // Colocar música de um cadastrado na fila
 function addToQueue(clientId) {
   const song = document.getElementById('song-' + clientId).value.replace(/\D/g, '');
@@ -981,6 +988,7 @@ function renderQueue() {
     return `
     <div class="card ${isFirst ? 'first-up' : ''} ${stage && stage.id === it.id ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}">
       <div class="item-title">${esc(clientName(it.clientId))} — <span class="queue-code">${esc(it.song)}</span></div>
+      ${nomeMusicaHtml(it.song)}
       <div class="info-linha">${cntChip(it.clientId)}${mesaTag(it.clientId)}${it.absent ? '<span class="abs-tag ausente-tag">AUSENTE</span>' : ''}</div>
       ${stageHtml}
       <div class="card-foot">
@@ -1043,7 +1051,7 @@ function renderStagePanel() {
   const cur = stage ? full.find(x => x.id === stage.id) : null;
   const next = full.find(x => !cur || x.id !== cur.id);
   const curHtml = cur
-    ? `<div class="sp-label">NO PALCO</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>`
+    ? `<div class="sp-label">NO PALCO</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>${nomeMusicaHtml(cur.song)}`
       + (stage.step === 'nota' ? `<div class="score-row"><input id="stageScore" type="text" inputmode="numeric" placeholder="Nota" autocomplete="off"><button class="save-btn" data-save="${cur.id}">SALVAR NOTA</button></div><p id="stageErr" class="err"></p>` : '')
     : '';
   // Faixa de etapas: mostra onde você está
