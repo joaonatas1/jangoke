@@ -111,6 +111,7 @@
   .neon { text-align: center; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.1; letter-spacing: 2px; color: #fff; margin: 0 0 14px; text-shadow: 0 0 4px #fff, 0 0 10px #ff2d95, 0 0 22px #ff2d95, 0 0 38px #ff2d95, 0 0 56px #00f0ff; }
   #mesaNova { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   #pendingSong { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
+  .song-nome { font-size: 24px; font-weight: 700; text-align: center; color: #ffd33d; min-height: 30px; margin-top: 8px; line-height: 1.2; }
   .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos, .queue-code { color: #ffd33d !important; }
   .first-up { border-color: #1e8f4e; }
   .passos { display: flex; gap: 6px; margin-bottom: 8px; }
@@ -205,6 +206,7 @@
       <div class="stack">
         <div id="pendingName" class="item-title"></div>
         <input id="pendingSong" type="text" inputmode="numeric" placeholder="Código" autocomplete="off">
+        <div id="pendingSongName" class="song-nome"></div>
         <button id="btnPendingAdd">Adicionar à fila</button>
         <button class="sec" id="btnPendingLater">Depois</button>
         <p id="pendingErr" class="err"></p>
@@ -319,6 +321,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { mesaDe, ordenarFila, corDaMesa, faixaMusicas } from './fila.js';
+import { CATALOGO } from './catalogo.js';
 
 const PIN = '523';
 const KEY = 'karaoke-fila-v1';
@@ -670,12 +673,14 @@ function doPendingAdd(song) {
   save();
   pendingClientId = null;
   document.getElementById('pendingSong').value = '';
+  mostrarNome('pendingSongName', '');
   document.getElementById('pendingErr').textContent = '';
   render();
 }
 document.getElementById('btnPendingLater').onclick = () => {
   pendingClientId = null;
   document.getElementById('pendingSong').value = '';
+  mostrarNome('pendingSongName', '');
   document.getElementById('pendingErr').textContent = '';
   render();
 };
@@ -698,8 +703,21 @@ function fitCodeFont(el, max) {
 document.getElementById('pendingSong').oninput = e => {
   e.target.value = e.target.value.replace(/\D/g, '');
   fitCodeFont(e.target, 128);
+  mostrarNome('pendingSongName', e.target.value);
 };
 window.addEventListener('resize', () => fitCodeFont(document.getElementById('pendingSong'), 128));
+
+// Lista de músicas do bar (catalogo.js): código -> nome da música
+function nomeDaMusica(codigo) {
+  if (!codigo) return '';
+  if (CATALOGO[codigo]) return CATALOGO[codigo];
+  return Object.keys(CATALOGO).length ? 'Código não encontrado na lista' : '';
+}
+// Mostra o nome da música logo abaixo do campo de código
+function mostrarNome(elId, codigo) {
+  const el = document.getElementById(elId);
+  if (el) el.textContent = nomeDaMusica(String(codigo || '').replace(/\D/g, ''));
+}
 
 // Colocar música de um cadastrado na fila
 function addToQueue(clientId) {
@@ -1079,11 +1097,12 @@ function renderClients() {
         <input id="song-${c.id}" inputmode="numeric" placeholder="Código" autocomplete="off">
         <button data-add="${c.id}">Adicionar à fila</button>
       </div>
+      <div id="songname-${c.id}" class="song-nome"></div>
       <button class="mini" data-editc="${c.id}">Alterar mesa</button> <button class="mini" data-editn="${c.id}">Alterar nome</button> <button class="mini" data-delc="${c.id}" style="color:#ff6b6b">Remover cadastrado</button>` : ''}
     </div>`;
   }).join('');
   el.querySelectorAll('input[id^="song-"]').forEach(inp => {
-    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, ''); fitCodeFont(inp, 128); };
+    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, ''); fitCodeFont(inp, 128); mostrarNome('songname-' + inp.id.slice(5), inp.value); };
     fitCodeFont(inp, 128);
   });
 }
