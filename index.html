@@ -202,7 +202,7 @@
   <div id="app">
     <div class="title-row"><h1 class="neon">JANGOKÊ</h1><button class="rank-btn hidden" id="btnBack">← PAINEL</button></div>
     <p id="status">Carregando...</p>
-    <div id="tabs" class="tabs"><button id="tabBtnFila">FILA</button><button id="tabBtnCantor">CADASTRO</button></div>
+    <div id="tabs" class="tabs"><button id="tabBtnFila">Fila</button><button id="tabBtnCantor">Cadastro</button></div>
 
     <div id="tabCantor" class="tab">
     <h2>Novo cadastro</h2>
@@ -1007,7 +1007,7 @@ function renderQueue() {
     }
     return `
     <div class="card marca-mesa ${isFirst ? 'first-up' : ''} ${noPalco ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}" style="border-left-color:${mesaCor(it.clientId)}">
-      ${noPalco ? '<div class="selo selo-palco">NO PALCO</div>' : (isFirst ? '<div class="selo selo-proximo">PRÓXIMO</div>' : '')}
+      ${noPalco ? '<div class="selo selo-palco">No palco</div>' : (isFirst ? '<div class="selo selo-proximo">Próximo a cantar</div>' : '')}
       <div class="linha-topo"><div class="fc-nome">${esc(clientName(it.clientId))}</div><span class="queue-code">${esc(it.song)}</span></div>
       ${nomeMusicaHtml(it.song)}
       <div class="info-linha">${mesaTexto(it.clientId)} · ${cantouTexto(it.clientId)}${it.absent ? ' · <b>ausente</b>' : ''}</div>
@@ -1072,7 +1072,7 @@ function renderStagePanel() {
   const cur = stage ? full.find(x => x.id === stage.id) : null;
   const next = full.find(x => !cur || x.id !== cur.id);
   const curHtml = cur
-    ? `<div class="sp-label">NO PALCO</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>${nomeMusicaHtml(cur.song)}`
+    ? `<div class="sp-label">No palco</div><div class="sp-name">${esc(clientName(cur.clientId))} — <span class="queue-code">${esc(cur.song)}</span></div>${nomeMusicaHtml(cur.song)}`
       + (stage.step === 'nota' ? `<div class="score-row"><input id="stageScore" type="text" inputmode="numeric" placeholder="Nota" autocomplete="off"><button class="save-btn" data-save="${cur.id}">SALVAR NOTA</button></div><p id="stageErr" class="err"></p>` : '')
     : '';
   // Faixa de etapas: mostra onde você está
