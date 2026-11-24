@@ -47,6 +47,13 @@
   .rank-card-x { position: relative; overflow: hidden; }
   .rank-card-x > * { position: relative; z-index: 1; }
   .bg-emoji { position: absolute !important; right: 4px; top: 50%; transform: translateY(-50%); font-size: 64px; opacity: 0.22; z-index: 0 !important; pointer-events: none; }
+  #buscaMusica { width: 100%; font-size: 18px; min-height: 52px; padding: 10px 14px; border-radius: 12px; border: 1px solid #1f4a33; background: #04100a; color: #e6f7ec; outline: none; }
+  #buscaMusica:focus { border-color: #1e8f4e; }
+  .busca-info { font-size: 14px; color: #9cc7ad; margin: 8px 2px 10px; }
+  .res { display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-bottom: 1px solid #0a1d13; }
+  .res .res-cod { font-size: 28px; font-weight: 800; color: #ffd33d; min-width: 92px; text-align: center; letter-spacing: 1px; }
+  .res .res-tit { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.25; }
+  .res .res-art { font-size: 14px; color: #9cc7ad; margin-top: 2px; }
   .bg-emoji.bg-cold { left: 50%; right: auto; font-size: 150px; transform: translate(-50%, -50%) rotate(12deg); white-space: nowrap; }
 </style>
 </head>
@@ -54,7 +61,11 @@
 
   <h1>JANGOKÊ</h1>
   <p id="status" class="small">Carregando...</p>
-  <a class="btn-catalogo" href="https://www.videoland.com.br/wwwroot/arquivos/Lista-Pacote-10765.pdf" target="_blank" rel="noopener">Catálogo de músicas</a>
+  <h2>Procurar música</h2>
+  <input id="buscaMusica" type="search" placeholder="Nome da música ou do cantor" autocomplete="off" enterkeyhint="search">
+  <p id="buscaInfo" class="busca-info">Digite pelo menos 2 letras. Depois é só mostrar o código no balcão.</p>
+  <div id="buscaRes"></div>
+  <a class="btn-catalogo" href="https://www.videoland.com.br/wwwroot/arquivos/Lista-Pacote-10765.pdf" target="_blank" rel="noopener">Catálogo completo (PDF)</a>
 
   <h2>Fila - quem vai cantar</h2>
   <div id="fila"></div>
@@ -156,6 +167,47 @@ function desenhar(db) {
     }).join('');
   }
 }
+
+// PROCURAR MÚSICA: pelo nome da música, pelo cantor ou pelo código
+const semAcento = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+let ARTISTAS = {};
+let indice = null;
+function montarIndice() {
+  indice = Object.keys(CATALOGO).map(cod => {
+    const tit = CATALOGO[cod], art = ARTISTAS[cod] || '';
+    return { cod, tit, art, chave: semAcento(tit + ' ' + art), titN: semAcento(tit) };
+  });
+}
+function buscar() {
+  const q = document.getElementById('buscaMusica').value.trim();
+  const info = document.getElementById('buscaInfo');
+  const res = document.getElementById('buscaRes');
+  if (q.replace(/\s/g, '').length < 2) {
+    info.textContent = 'Digite pelo menos 2 letras. Depois é só mostrar o código no balcão.';
+    res.innerHTML = '';
+    return;
+  }
+  if (!indice) montarIndice();
+  const qN = semAcento(q);
+  const palavras = qN.split(/\s+/).filter(Boolean);
+  const achados = indice.filter(m => /^\d+$/.test(qN) ? m.cod.startsWith(qN) : palavras.every(w => m.chave.includes(w)));
+  achados.sort((a, b) => (b.titN.startsWith(qN) - a.titN.startsWith(qN)) || a.titN.localeCompare(b.titN));
+  const MAX = 40;
+  if (!achados.length) {
+    info.textContent = 'Nenhuma música encontrada. Tente outra palavra ou só o nome do cantor.';
+  } else if (achados.length > MAX) {
+    info.textContent = `${achados.length} músicas encontradas. Mostrando ${MAX}: digite mais palavras para achar mais rápido.`;
+  } else {
+    info.textContent = `${achados.length} ${achados.length === 1 ? 'música encontrada' : 'músicas encontradas'}. Mostre o código no balcão.`;
+  }
+  res.innerHTML = achados.slice(0, MAX).map(m => `<div class="res">
+      <div class="res-cod">${esc(m.cod)}</div>
+      <div><div class="res-tit">${esc(m.tit)}</div>${m.art ? `<div class="res-art">${esc(m.art)}</div>` : ''}</div>
+    </div>`).join('');
+}
+document.getElementById('buscaMusica').addEventListener('input', buscar);
+// Carrega os nomes dos cantores em segundo plano; a busca por música já funciona antes disso
+import('./artistas.js').then(m => { ARTISTAS = m.ARTISTAS; indice = null; buscar(); }).catch(() => {});
 
 onSnapshot(DOC, snap => {
   const db = normalize(snap.exists() ? snap.data().dados : null);
