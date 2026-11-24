@@ -16,11 +16,13 @@
 <title>JANGOKÊ</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; background: #010503; color: #e6f7ec; font-family: system-ui, -apple-system, sans-serif; -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; padding: 0; background: #010503; color: #e6f7ec; font-family: 'Montserrat', system-ui, -apple-system, sans-serif; -webkit-text-size-adjust: 100%; }
+  button, input, textarea, select { font-family: 'Montserrat', sans-serif; }
+  h1, h2, h3 { font-weight: 800; }
   body { padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow-x: hidden; }
 
   h1 { color: #0f5c33; font-size: 24px; margin: 0 0 6px; }
-  h2 { font-size: 18px; color: #e6f7ec; border-bottom: 1px solid #0a1d13; padding-bottom: 6px; margin: 26px 0 12px; }
+  h2 { font-size: 18px; font-weight: 800; color: #e6f7ec; border-bottom: 1px solid #0a1d13; padding-bottom: 6px; margin: 26px 0 12px; }
 
   /* 16px nos campos evita o zoom automático no iPhone */
   input, textarea { width: 100%; font-size: 16px; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid #12301f; background: #04100a; color: #e6f7ec; outline: none; font-family: inherit; }
@@ -106,7 +108,7 @@
     .name-row input { flex: 1; }
     .name-row button { width: auto; }
   }
-  .neon { text-align: center; font-family: "Bebas Neue", Impact, sans-serif; font-weight: normal; font-size: 64px; line-height: 1; letter-spacing: 4px; color: #fff; margin: 0 0 14px; text-shadow: 0 0 4px #fff, 0 0 10px #ff2d95, 0 0 22px #ff2d95, 0 0 38px #ff2d95, 0 0 56px #00f0ff; }
+  .neon { text-align: center; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.1; letter-spacing: 2px; color: #fff; margin: 0 0 14px; text-shadow: 0 0 4px #fff, 0 0 10px #ff2d95, 0 0 22px #ff2d95, 0 0 38px #ff2d95, 0 0 56px #00f0ff; }
   #mesaNova { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   #pendingSong { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos, .queue-code { color: #ffd33d !important; }
@@ -168,7 +170,7 @@
   a[href*="netlify.com"], [class*="netlify" i], [id*="netlify" i], iframe[src*="netlify"] { display: none !important; }
   #nl-badge, .nl-badge, #nl-card, .nl-card, [id^="nl-"], [class^="nl-"] { display: none !important; }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
