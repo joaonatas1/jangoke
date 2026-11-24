@@ -22,6 +22,7 @@
   .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .nome { font-size: 20px; font-weight: bold; word-break: break-word; }
   .info { font-size: 14px; color: #9cc7ad; margin-top: 4px; }
+  .musica { font-size: 15px; font-weight: 600; color: #cfe9d8; margin-top: 3px; clear: both; }
   .code { font-size: 30px; font-weight: bold; color: #ffd33d; flex-shrink: 0; }
   .score { font-size: 30px; font-weight: bold; color: #ffd33d; flex-shrink: 0; }
   .pos { font-size: 22px; font-weight: bold; color: #9cc7ad; min-width: 44px; text-align: center; flex-shrink: 0; }
@@ -65,6 +66,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { mesaDe, ordenarFila, ordenarRanking, corDaMesa, faixaMusicas } from './fila.js';
+import { CATALOGO } from './catalogo.js';
+const musica = cod => CATALOGO[String(cod)] ? `<div class="musica">${esc(CATALOGO[String(cod)])}</div>` : '';
 
 const firebaseApp = initializeApp({
   apiKey: 'AIzaSyD13Y66-paZkQsmlXRm3QAhJfs-x_UFJRU',
@@ -104,7 +107,7 @@ function desenhar(db) {
     const mesa = mesaDe(db, q.clientId);
     if (i !== 0 && i !== ultimoFila) {
       const mesaTxt = mesa === 'sem-mesa' ? '' : ` <span class="mesa-chip" style="background:${corDaMesa(mesa)}">Mesa ${esc(mesa)}</span>`;
-      return `<div class="linha"><span class="n">${i + 1}º</span>${nome}${mesaTxt}<span class="cod">${esc(q.song)}</span></div>`;
+      return `<div class="linha"><span class="n">${i + 1}º</span>${nome}${mesaTxt}<span class="cod">${esc(q.song)}</span>${musica(q.song)}</div>`;
     }
     const tagMesa = mesa === 'sem-mesa' ? '' : `<span class="mesa-chip" style="background:${corDaMesa(mesa)}">Mesa ${esc(mesa)}</span>`;
     const tagPalco = q.onStage ? '<span class="tag palco">NO PALCO</span>' : '';
@@ -115,6 +118,7 @@ function desenhar(db) {
       <div class="row">
         <div>
           <div class="nome">${nome}${tagMesa}${tagPalco}${tagProximo}${tagAusente}</div>
+          ${musica(q.song)}
           <div class="info"><span class="cnt cnt-${faixaMusicas(cantou(db, q.clientId))}">${cantou(db, q.clientId)}x</span> música(s) já cantada(s)</div>
         </div>
         <div class="code">${esc(q.song)}</div>

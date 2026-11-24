@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JANGOKÊ">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#010503">
 <meta property="og:url" content="https://jangoke.netlify.app/">
 <meta property="og:title" content="JANGOKÊ">
@@ -162,6 +168,16 @@
   .selo-palco { color: #ffd33d; }
   .stage-btn.leve { min-height: 52px; font-size: 18px; background: transparent; color: #e6f7ec; border: 1px solid #1f4a33; }
   details.mais { margin-top: 10px; }
+  button.sem-lista { background: #3a4a42 !important; color: #cfe9d8 !important; }
+  .add-row input[id^="qsong-"] { font-size: 96px; line-height: 1.1; text-align: center; min-height: 140px; font-weight: bold; letter-spacing: 2px; }
+  .add-musica { margin-top: 10px; padding-top: 10px; border-top: 1px solid #1a3526; }
+  .resumo { margin: -4px 0 10px; font-size: 15px; color: #9cc7ad; }
+  .fila-ferramentas { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .fila-ferramentas input { flex: 1; }
+  .fila-ferramentas button { margin-top: 0; white-space: nowrap; }
+  button.mini.ligado { background: #1e8f4e; border-color: #1e8f4e; color: #fff; }
+  .grupo-mesa { font-size: 16px; font-weight: 800; color: #fff; padding: 6px 0 6px 10px; border-left: 8px solid; border-radius: 4px; margin-top: 8px; }
+  .grupo-mesa span { font-weight: 600; color: #9cc7ad; font-size: 14px; }
   details.mais summary { cursor: pointer; font-size: 15px; color: #9cc7ad; padding: 8px 0; }
   #firstName, #lastName, #mesa { text-align: center; }
   #mesa { -moz-appearance: textfield; appearance: textfield; }
@@ -284,7 +300,11 @@
     <div id="tabFila" class="tab">
       <div id="stagePanel" class="card"></div>
     <h2>Fila</h2>
-    <input id="queueSearch" type="text" placeholder="Buscar na fila..." autocomplete="off" style="margin-bottom:10px">
+    <p id="resumoNoite" class="resumo"></p>
+    <div class="fila-ferramentas">
+      <input id="queueSearch" type="text" placeholder="Buscar na fila..." autocomplete="off">
+      <button id="btnAgrupar" class="mini">Agrupar por mesa</button>
+    </div>
     <div id="queue" class="stack"></div>
     </div>
 
@@ -368,6 +388,7 @@ function isEmpty(d) {
 let db = normalize(JSON.parse(localStorage.getItem(KEY) || 'null'));
 let currentQueueId = null;
 let openMenuId = null;
+let addMusicaItem = null; // cartão da fila com o campo "+ Música" aberto
 let stage = (() => { try { return JSON.parse(localStorage.getItem('karaoke-stage') || 'null'); } catch (e) { return null; } })(); // { id, step: "palco" | "nota" } para a primeira da fila
 let pendingClientId = null;
 let pinCallback = null;
@@ -682,9 +703,7 @@ document.getElementById('btnPendingAdd').onclick = () => {
   const err = document.getElementById('pendingErr');
   const song = document.getElementById('pendingSong').value.replace(/\D/g, '');
   if (!song) { err.textContent = 'Digite o código da música'; return; }
-  const dup = findSongInQueue(song);
-  if (dup) { askConfirm(songWarning(song, dup), () => doPendingAdd(song)); return; }
-  doPendingAdd(song);
+  confirmarEAdicionar(pendingClientId, song, () => doPendingAdd(song));
 };
 function doPendingAdd(song) {
   snapshot('entrada de ' + clientName(pendingClientId));
@@ -693,6 +712,7 @@ function doPendingAdd(song) {
   pendingClientId = null;
   document.getElementById('pendingSong').value = '';
   mostrarNome('pendingSongName', '');
+  marcarBotao(document.getElementById('btnPendingAdd'), '');
   document.getElementById('pendingErr').textContent = '';
   render();
 }
@@ -700,6 +720,7 @@ document.getElementById('btnPendingLater').onclick = () => {
   pendingClientId = null;
   document.getElementById('pendingSong').value = '';
   mostrarNome('pendingSongName', '');
+  marcarBotao(document.getElementById('btnPendingAdd'), '');
   document.getElementById('pendingErr').textContent = '';
   render();
 };
@@ -723,6 +744,7 @@ document.getElementById('pendingSong').oninput = e => {
   e.target.value = e.target.value.replace(/\D/g, '');
   fitCodeFont(e.target, 128);
   mostrarNome('pendingSongName', e.target.value);
+  marcarBotao(document.getElementById('btnPendingAdd'), e.target.value);
 };
 window.addEventListener('resize', () => fitCodeFont(document.getElementById('pendingSong'), 128));
 
@@ -737,6 +759,25 @@ function mostrarNome(elId, codigo) {
   const el = document.getElementById(elId);
   if (el) el.textContent = nomeDaMusica(String(codigo || '').replace(/\D/g, ''));
 }
+// Botão "Adicionar à fila" fica cinza quando o código não está na lista
+function marcarBotao(btn, codigo) {
+  if (!btn) return;
+  const c = String(codigo || '').replace(/\D/g, '');
+  btn.classList.toggle('sem-lista', !!c && !CATALOGO[c]);
+}
+// Antes de adicionar: confirma música e pessoa; avisa se o código não existe ou se já está na fila
+function confirmarEAdicionar(clientId, song, feito) {
+  const nome = CATALOGO[song];
+  const quem = clientName(clientId);
+  const msg = nome
+    ? `Adicionar "${nome}" (${song}) para ${quem}?`
+    : `O código ${song} não está na lista de músicas. Adicionar mesmo assim para ${quem}?`;
+  askConfirm(msg, () => {
+    const dup = findSongInQueue(song);
+    if (dup) { askConfirm(songWarning(song, dup), feito); return; }
+    feito();
+  }, nome ? 'Sim, adicionar' : 'Adicionar mesmo assim');
+}
 
 // Nome da música logo abaixo do código, na fila e no palco
 function nomeMusicaHtml(codigo) {
@@ -748,14 +789,13 @@ function nomeMusicaHtml(codigo) {
 function addToQueue(clientId) {
   const song = document.getElementById('song-' + clientId).value.replace(/\D/g, '');
   if (!song) return;
-  const dup = findSongInQueue(song);
-  if (dup) { askConfirm(songWarning(song, dup), () => doAddToQueue(clientId, song)); return; }
-  doAddToQueue(clientId, song);
+  confirmarEAdicionar(clientId, song, () => doAddToQueue(clientId, song));
 }
 function doAddToQueue(clientId, song) {
   snapshot('entrada de ' + clientName(clientId));
   db.queue.push({ id: uid(), clientId, song, addedAt: Date.now() });
   openClientId = null;
+  addMusicaItem = null;
   save();
   render();
 }
@@ -763,6 +803,13 @@ function doAddToQueue(clientId, song) {
 // FILA: remover e editar pedem PIN; tocar no cartão inicia a apresentação
 document.getElementById('queue').oninput = e => {
   if (e.target.id === 'stageScore') e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+  if (e.target.id.startsWith('qsong-')) {
+    const inp = e.target, itemId = inp.id.slice(6);
+    inp.value = inp.value.replace(/\D/g, '');
+    fitCodeFont(inp, 96);
+    mostrarNome('qsongname-' + itemId, inp.value);
+    marcarBotao(document.querySelector('[data-addq="' + itemId + '"]'), inp.value);
+  }
 };
 
 // Enter confirma em todos os campos
@@ -775,6 +822,7 @@ document.addEventListener('keydown', e => {
   if (id === 'stageScore') { const b = document.querySelector('[data-save]'); if (b) b.click(); return; }
   if (id === 'pendingSong') { document.getElementById('btnPendingAdd').click(); return; }
   if (id === 'editCode' || id === 'editScore') { document.getElementById('editSave').click(); return; }
+  if (id.startsWith('qsong-')) { const b = document.querySelector('[data-addq="' + id.slice(6) + '"]'); if (b) b.click(); return; }
   if (id.startsWith('song-')) { const b = document.querySelector('[data-add="' + id.slice(5) + '"]'); if (b) b.click(); }
 });
 
@@ -788,7 +836,7 @@ function busy() {
   const editOpen = !document.getElementById('editBox').classList.contains('hidden');
   const recentSave = Date.now() - lastLocalChange < 4000;
   const confirmOpen = !document.getElementById('confirmBox').classList.contains('hidden') || !document.getElementById('mesaBox').classList.contains('hidden') || !document.getElementById('nomeBox').classList.contains('hidden');
-  return typing || pinOpen || editOpen || confirmOpen || recentSave || !!stage || !!openClientId || !!pendingClientId || !!openMenuId;
+  return typing || pinOpen || editOpen || confirmOpen || recentSave || !!stage || !!openClientId || !!pendingClientId || !!openMenuId || !!addMusicaItem;
 }
 async function refreshRemote() {
   if (pendingSync) { save(); return; }
@@ -909,6 +957,24 @@ document.getElementById('queue').onclick = e => {
     openEdit({ type: 'queue', id });
     return;
   }
+  const addMus = e.target.closest('[data-addmus]');
+  if (addMus) {
+    addMusicaItem = addMusicaItem === addMus.dataset.addmus ? null : addMus.dataset.addmus;
+    openMenuId = null;
+    renderQueue();
+    if (addMusicaItem) setTimeout(() => { const f = document.getElementById('qsong-' + addMusicaItem); if (f) { f.focus(); f.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 50);
+    return;
+  }
+  if (e.target.closest('[data-addcancel]')) { addMusicaItem = null; renderQueue(); return; }
+  const addQ = e.target.closest('[data-addq]');
+  if (addQ) {
+    const item = db.queue.find(x => x.id === addQ.dataset.addq);
+    const inp = document.getElementById('qsong-' + addQ.dataset.addq);
+    const song = inp ? inp.value.replace(/\D/g, '') : '';
+    if (!item || !song) return;
+    confirmarEAdicionar(item.clientId, song, () => doAddToQueue(item.clientId, song));
+    return;
+  }
   const menu = e.target.closest('[data-menu]');
   if (menu) { const id = menu.dataset.menu; openMenuId = openMenuId === id ? null : id; renderQueue(); return; }
   const abs = e.target.closest('[data-absent]');
@@ -981,48 +1047,105 @@ function persistStage() {
   } catch (e) { /* sem armazenamento: segue normal */ }
 }
 
+let agruparMesa = localStorage.getItem('karaoke-agrupar') === '1';
+document.getElementById('btnAgrupar').onclick = () => {
+  agruparMesa = !agruparMesa;
+  localStorage.setItem('karaoke-agrupar', agruparMesa ? '1' : '0');
+  renderQueue();
+};
+// Há quanto tempo a pessoa espera
+function esperaTexto(it) {
+  const t = it.waitSince || it.addedAt;
+  if (!t) return '';
+  const min = Math.floor((Date.now() - t) / 60000);
+  if (min < 1) return 'chegou agora';
+  if (min < 60) return 'esperando há ' + min + ' min';
+  return 'esperando há ' + Math.floor(min / 60) + 'h' + String(min % 60).padStart(2, '0');
+}
+// Linha de resumo: na fila, já cantaram, mesas
+function renderResumo() {
+  const naFila = db.queue.length;
+  const cantaram = new Set(db.performances.map(p => p.clientId)).size;
+  const mesas = new Set(db.queue.map(q => mesaOf(q.clientId)).filter(m => m !== 'sem-mesa')).size;
+  document.getElementById('resumoNoite').textContent =
+    `${naFila} na fila · ${cantaram} já ${cantaram === 1 ? 'cantou' : 'cantaram'} · ${mesas} ${mesas === 1 ? 'mesa' : 'mesas'} na fila`;
+}
+function cardFila(it, proximo) {
+  const isFirst = proximo && it.id === proximo.id;
+  const noPalco = stage && stage.id === it.id;
+  let stageHtml = '';
+  if (!it.absent) {
+    const s = noPalco ? stage.step : null;
+    if (s === 'nota') {
+      stageHtml = ''; // a nota é digitada no painel de cima, ao lado do código
+    } else if (s === 'palco') {
+      stageHtml = `<button class="stage-btn palco" data-nota="${it.id}">NO PALCO</button>`;
+    } else {
+      stageHtml = `<button class="stage-btn${isFirst ? '' : ' leve'}" data-palco="${it.id}">COMEÇAR</button>`;
+    }
+  }
+  const espera = (!it.absent && !noPalco) ? ' · ' + esperaTexto(it) : '';
+  const addHtml = addMusicaItem === it.id ? `
+    <div class="add-musica">
+      <div class="small">Nova música para ${esc(clientName(it.clientId))}</div>
+      <div class="add-row">
+        <input id="qsong-${it.id}" inputmode="numeric" placeholder="Código" autocomplete="off">
+        <button data-addq="${it.id}">Adicionar à fila</button>
+      </div>
+      <div id="qsongname-${it.id}" class="song-nome"></div>
+      <button class="mini" data-addcancel="1">Cancelar</button>
+    </div>` : '';
+  return `
+    <div class="card marca-mesa ${isFirst ? 'first-up' : ''} ${noPalco ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}" style="border-left-color:${mesaCor(it.clientId)}">
+      ${noPalco ? '<div class="selo selo-palco">No palco</div>' : (isFirst ? '<div class="selo selo-proximo">Próximo a cantar</div>' : '')}
+      <div class="linha-topo"><div class="fc-nome">${esc(clientName(it.clientId))}</div><span class="queue-code">${esc(it.song)}</span></div>
+      ${nomeMusicaHtml(it.song)}
+      <div class="info-linha">${mesaTexto(it.clientId)} · ${cantouTexto(it.clientId)}${it.absent ? ' · <b>ausente</b>' : ''}${espera}</div>
+      ${stageHtml}
+      ${addHtml}
+      <div class="card-foot">
+        ${openMenuId === it.id ? `<button class="mini" data-absent="${it.id}">${it.absent ? 'Voltou (presente)' : 'Ausente'}</button><button class="mini" data-editq="${it.id}">Editar código</button><button class="mini" data-delq="${it.id}" style="color:#ff6b6b">Remover da fila</button>` : ''}
+        <button class="mini" data-addmus="${it.id}">+ Música</button>
+        <button class="dots" data-menu="${it.id}" aria-label="Opções">⋮</button>
+      </div>
+    </div>`;
+}
 function renderQueue() {
   persistStage();
+  renderResumo();
+  document.getElementById('btnAgrupar').classList.toggle('ligado', agruparMesa);
   const full = sortedQueue();
-  const first = full[0];
+  if (addMusicaItem && !full.some(x => x.id === addMusicaItem)) addMusicaItem = null;
   const term = (document.getElementById('queueSearch').value || '').trim().toLowerCase();
   const q = full.filter(it => clientName(it.clientId).toLowerCase().includes(term));
   const el = document.getElementById('queue');
   if (!full.length) { el.innerHTML = '<p class="small">Fila vazia</p>'; renderStagePanel(); return; }
   if (!q.length) { el.innerHTML = '<p class="small">Ninguém encontrado na fila</p>'; renderStagePanel(); return; }
   const proximo = full.find(x => !x.absent && !(stage && stage.id === x.id));
-  el.innerHTML = q.map(it => {
-    const isFirst = proximo && it.id === proximo.id;
-    const noPalco = stage && stage.id === it.id;
-    let stageHtml = '';
-    if (!it.absent) {
-      const s = stage && stage.id === it.id ? stage.step : null;
-      if (s === 'nota') {
-        stageHtml = ''; // a nota é digitada no painel de cima, ao lado do código
-      } else if (s === 'palco') {
-        stageHtml = `<button class="stage-btn palco" data-nota="${it.id}">NO PALCO</button>`;
-      } else {
-        stageHtml = `<button class="stage-btn${isFirst ? '' : ' leve'}" data-palco="${it.id}">COMEÇAR</button>`;
-      }
-    }
-    return `
-    <div class="card marca-mesa ${isFirst ? 'first-up' : ''} ${noPalco ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}" style="border-left-color:${mesaCor(it.clientId)}">
-      ${noPalco ? '<div class="selo selo-palco">No palco</div>' : (isFirst ? '<div class="selo selo-proximo">Próximo a cantar</div>' : '')}
-      <div class="linha-topo"><div class="fc-nome">${esc(clientName(it.clientId))}</div><span class="queue-code">${esc(it.song)}</span></div>
-      ${nomeMusicaHtml(it.song)}
-      <div class="info-linha">${mesaTexto(it.clientId)} · ${cantouTexto(it.clientId)}${it.absent ? ' · <b>ausente</b>' : ''}</div>
-      ${stageHtml}
-      <div class="card-foot">
-        ${openMenuId === it.id ? `<button class="mini" data-absent="${it.id}">${it.absent ? 'Voltou (presente)' : 'Ausente'}</button><button class="mini" data-editq="${it.id}">Editar código</button><button class="mini" data-delq="${it.id}" style="color:#ff6b6b">Remover da fila</button>` : ''}
-        <button class="dots" data-menu="${it.id}" aria-label="Opções">⋮</button>
-      </div>
-    </div>`;
-  }).join('');
+  if (agruparMesa) {
+    // Mesas na ordem em que aparecem na fila; dentro de cada mesa, a ordem da fila
+    const grupos = new Map();
+    q.forEach(it => { const m = mesaOf(it.clientId); if (!grupos.has(m)) grupos.set(m, []); grupos.get(m).push(it); });
+    el.innerHTML = [...grupos].map(([m, itens]) => {
+      const cor = m === 'sem-mesa' ? '#2a3a31' : corDaMesa(m);
+      const titulo = m === 'sem-mesa' ? 'Sem mesa' : 'Mesa ' + esc(m);
+      return `<div class="grupo-mesa" style="border-left-color:${cor}">${titulo} <span>· ${itens.length} ${itens.length === 1 ? 'música' : 'músicas'}</span></div>`
+        + itens.map(it => cardFila(it, proximo)).join('');
+    }).join('');
+  } else {
+    el.innerHTML = q.map(it => cardFila(it, proximo)).join('');
+  }
+  if (addMusicaItem) {
+    const f = document.getElementById('qsong-' + addMusicaItem);
+    if (f) fitCodeFont(f, 96);
+  }
   if (stage && stage.step === 'nota') {
     setTimeout(() => { const f = document.getElementById('stageScore'); if (f) f.focus(); }, 50);
   }
   renderStagePanel();
 }
+// Atualiza o tempo de espera a cada minuto
+setInterval(() => { if (!busy()) renderQueue(); }, 60000);
 
 // NO PALCO: a pessoa fica em primeiro até a nota ser salva
 function markOnStage(id) {
@@ -1133,7 +1256,7 @@ function renderClients() {
     </div>`;
   }).join('');
   el.querySelectorAll('input[id^="song-"]').forEach(inp => {
-    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, ''); fitCodeFont(inp, 128); mostrarNome('songname-' + inp.id.slice(5), inp.value); };
+    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, ''); fitCodeFont(inp, 128); mostrarNome('songname-' + inp.id.slice(5), inp.value); marcarBotao(document.querySelector('[data-add="' + inp.id.slice(5) + '"]'), inp.value); };
     fitCodeFont(inp, 128);
   });
 }
