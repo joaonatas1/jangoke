@@ -168,6 +168,7 @@
   .selo-palco { color: #ffd33d; }
   .stage-btn.leve { min-height: 52px; font-size: 18px; background: transparent; color: #e6f7ec; border: 1px solid #1f4a33; }
   details.mais { margin-top: 10px; }
+  #avisoVersao { position: fixed; top: 0; left: 0; right: 0; z-index: 95; width: 100%; border-radius: 0; min-height: 56px; padding: max(12px, env(safe-area-inset-top)) 16px 12px; background: #1e8f4e; color: #fff; font-size: 17px; font-weight: 800; box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
   /* Trava de 1 segundo contra toque duplo */
   body.travado .stage-btn, body.travado .save-btn, body.travado #dock .dock-main { opacity: 0.5; pointer-events: none; }
   /* Tela dividida (tablet/computador): fila à esquerda, cadastro à direita */
@@ -343,6 +344,7 @@
   </div>
 
   <nav id="dock"></nav>
+  <button id="avisoVersao" class="hidden">🔄 Versão nova disponível. Toque para atualizar</button>
 
   <div id="confirmBox" class="overlay hidden">
     <div class="card stack">
@@ -1573,6 +1575,36 @@ function render() {
   renderNights();
   renderDock();
 }
+
+// VERSÃO NOVA: a cada minuto confere se os arquivos do sistema mudaram no servidor.
+// Se mudaram, mostra a faixa "Versão nova disponível" para recarregar.
+const ARQUIVOS_DO_SISTEMA = ['/', '/fila.js', '/catalogo.js'];
+let versaoAberta = null;
+async function assinaturaVersao() {
+  const partes = await Promise.all(ARQUIVOS_DO_SISTEMA.map(async u => {
+    const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    return r.headers.get('etag') || r.headers.get('last-modified') || '';
+  }));
+  return partes.join('|');
+}
+async function conferirVersao() {
+  if (versaoAberta !== null && document.hidden) return;
+  try {
+    const atual = await assinaturaVersao();
+    if (!atual.replace(/\|/g, '')) return; // servidor não informou a versão
+    if (versaoAberta === null) { versaoAberta = atual; return; }
+    if (atual !== versaoAberta) document.getElementById('avisoVersao').classList.remove('hidden');
+  } catch (e) { /* sem internet: tenta de novo depois */ }
+}
+document.getElementById('avisoVersao').onclick = () => {
+  // o que ainda não foi enviado fica guardado neste aparelho e é enviado ao abrir de novo
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* sem armazenamento */ }
+  location.reload();
+};
+conferirVersao();
+setInterval(conferirVersao, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) conferirVersao(); });
 
 // Mostra o que já está neste aparelho e depois sincroniza com a nuvem
 render();
