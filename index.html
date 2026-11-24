@@ -25,20 +25,20 @@
   h2 { font-size: 18px; font-weight: 800; color: #e6f7ec; border-bottom: 1px solid #0a1d13; padding-bottom: 6px; margin: 26px 0 12px; }
 
   /* 16px nos campos evita o zoom automático no iPhone */
-  input, textarea { width: 100%; font-size: 16px; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid #12301f; background: #04100a; color: #e6f7ec; outline: none; font-family: inherit; }
+  input, textarea { width: 100%; font-size: 16px; min-height: 48px; padding: 10px 14px; border-radius: 10px; border: 1px solid #1f4a33; background: #04100a; color: #e6f7ec; outline: none; font-family: inherit; }
   textarea { min-height: 180px; resize: vertical; }
   input:focus, textarea:focus { border-color: #0f5c33; }
   button { font-size: 16px; font-weight: bold; min-height: 48px; padding: 10px 16px; border-radius: 10px; border: none; background: #17703d; color: #fff; cursor: pointer; width: 100%; }
   button:active { opacity: 0.8; }
   button.sec { background: #0a1d13; color: #e6f7ec; border: 1px solid #0f5c33; }
   button.perigo { background: #7f1d1d; color: #fff; }
-  button.mini { width: auto; min-height: 44px; font-size: 16px; padding: 6px 12px; margin-top: 8px; background: #0a1d13; color: #0f5c33; }
+  button.mini { width: auto; min-height: 44px; font-size: 16px; padding: 6px 12px; margin-top: 8px; background: #0a1d13; color: #e6f7ec; border: 1px solid #1f4a33; }
 
   .stack { display: flex; flex-direction: column; gap: 10px; }
-  .card { background: #030a06; border: 1px solid #0a1d13; border-radius: 12px; padding: 14px; }
+  .card { background: #030a06; border: 1px solid #1a3526; border-radius: 12px; padding: 14px; }
   .item { cursor: pointer; }
   .item:active { border-color: #0f5c33; }
-  .item-title { font-size: 17px; font-weight: bold; word-break: break-word; }
+  .item-title { font-size: 19px; font-weight: bold; word-break: break-word; }
   .small { font-size: 13px; color: #9cc7ad; line-height: 1.4; }
   .err { color: #ff6b6b; font-size: 14px; margin: 6px 0 0; }
   .hidden { display: none !important; }
@@ -60,8 +60,8 @@
   .tabs button.ativa { background: #17703d; color: #fff; }
   .add-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
   .add-row input[id^="song-"] { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
-  .queue-code { font-size: 30px; font-weight: bold; color: #0f5c33; letter-spacing: 1px; }
-  .song-nome-fila { font-size: 20px; font-weight: 700; color: #ffd33d; margin: 2px 0 6px; line-height: 1.2; }
+  .queue-code { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: 1px; white-space: nowrap; }
+  .song-nome-fila { font-size: 17px; font-weight: 600; color: #cfe9d8; margin: 2px 0 4px; line-height: 1.25; }
   #status { font-size: 12px; color: #7fae92; margin: 0 0 10px; }
 
   /* Ranking */
@@ -112,11 +112,12 @@
   .neon { text-align: center; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.1; letter-spacing: 2px; color: #fff; margin: 0 0 14px; text-shadow: 0 0 4px #fff, 0 0 10px #ff2d95, 0 0 22px #ff2d95, 0 0 38px #ff2d95, 0 0 56px #00f0ff; }
   #mesaNova { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
   #pendingSong { font-size: 128px; line-height: 1.1; text-align: center; min-height: 180px; font-weight: bold; letter-spacing: 2px; }
-  .song-nome { font-size: 24px; font-weight: 700; text-align: center; color: #ffd33d; min-height: 30px; margin-top: 8px; line-height: 1.2; }
-  .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos, .queue-code { color: #ffd33d !important; }
-  .first-up { border-color: #1e8f4e; }
+  .song-nome { font-size: 24px; font-weight: 700; text-align: center; color: #fff; min-height: 30px; margin-top: 8px; line-height: 1.2; }
+  .rank-score, .rank-1 .rank-score, .rank-low .rank-score, .rank-pos, .rank-1 .rank-pos, .rank-low .rank-pos { color: #ffd33d !important; }
+  #stagePanel .queue-code { color: #ffd33d; }
+  .card.first-up { border-color: #1e8f4e; border-width: 2px; }
   .passos { display: flex; gap: 6px; margin-bottom: 8px; }
-  .passos span { flex: 1; text-align: center; font-size: 13px; font-weight: bold; padding: 6px 4px; border-radius: 8px; background: #0a1d13; color: #7fae92; }
+  .passos span { flex: 1; text-align: center; font-size: 13px; font-weight: bold; padding: 6px 4px; border-radius: 8px; background: #0a1d13; color: #9cc7ad; }
   .passos span.passo.feito { color: #9cc7ad; }
   .passos span.passo.ativo { background: #17703d; color: #fff; }
   .dica { font-size: 15px; color: #cfe9d8; margin: 8px 0 0; }
@@ -124,9 +125,8 @@
   .stage-btn.palco { background: #ffd33d; color: #111; }
   .score-row { display: flex; gap: 8px; margin-top: 10px; }
   .score-row input { flex: 1; font-size: 24px; text-align: center; }
-  .save-btn { width: auto; min-height: 66px; font-size: 22px; background: #3b82f6; color: #fff; white-space: nowrap; }
-  .card.open { background: #8fe3ae; border-color: #8fe3ae; }
-  .card.open .client-name { color: #04100a; }
+  .save-btn { width: auto; min-height: 66px; font-size: 22px; background: #1e8f4e; color: #fff; white-space: nowrap; }
+  .card.open { background: #0d2a1b; border-color: #1e8f4e; }
   #stagePanel { position: sticky; top: 0; z-index: 4; border-color: #ffd33d; margin: 0 0 12px; }
   #stagePanel .sp-label { font-size: 12px; color: #ffd33d; letter-spacing: 2px; font-weight: bold; }
   #stagePanel .sp-name { font-size: 22px; font-weight: bold; margin-top: 4px; word-break: break-word; }
@@ -142,16 +142,27 @@
   .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: #ffd33d; color: #111; font-weight: bold; padding: 12px 18px; border-radius: 10px; z-index: 80; max-width: 90%; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .undo { position: fixed; left: 14px; bottom: 24px; width: auto; min-height: 44px; background: #0a1d13; color: #e6f7ec; border: 1px solid #0f5c33; z-index: 79; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
   .mesa-chip { display: inline-block; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-  .info-linha { margin-top: 4px; font-size: 14px; color: #9cc7ad; }
+  .info-linha { margin-top: 4px; font-size: 15px; color: #9cc7ad; }
+  .info-linha b { color: #fff; }
   .cnt { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 4px; }
   .cnt-zero { background: #39ff14; color: #04100a; }
   .cnt-um { background: #ffd33d; color: #111; }
   .cnt-mais { background: #5b6b63; color: #fff; }
   .card.no-palco { border-color: #ffd33d; box-shadow: 0 0 12px rgba(255,211,61,0.35); }
   .ausente-tag { background: #f97316 !important; color: #111 !important; }
-  .card.ausente-card { opacity: 0.6; }
+  .card.ausente-card { opacity: 0.75; }
   .repetido-tag { display: inline-block; background: #f97316; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
   .abs-tag { display: inline-block; background: #9cc7ad; color: #111; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  /* Cartões: mesa como faixa colorida à esquerda, um destaque só */
+  .card.marca-mesa { border-left-width: 8px; }
+  .linha-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .fc-nome { font-size: 21px; font-weight: 800; color: #fff; word-break: break-word; }
+  .selo { font-size: 13px; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px; }
+  .selo-proximo { color: #2fd17a; }
+  .selo-palco { color: #ffd33d; }
+  .stage-btn.leve { min-height: 52px; font-size: 18px; background: transparent; color: #e6f7ec; border: 1px solid #1f4a33; }
+  details.mais { margin-top: 10px; }
+  details.mais summary { cursor: pointer; font-size: 15px; color: #9cc7ad; padding: 8px 0; }
   #firstName, #lastName, #mesa { text-align: center; }
   #mesa { -moz-appearance: textfield; appearance: textfield; }
   #mesa::-webkit-inner-spin-button, #mesa::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -164,8 +175,9 @@
   #dock { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); background: #030a06; border-top: 1px solid #0f5c33; z-index: 40; }
   #dock button { flex: 1; width: auto; min-height: 62px; font-size: 17px; padding: 6px 4px; white-space: nowrap; }
   #dock button.dock-main { flex: 1.6; background: #ffd33d; color: #111; }
-  #dock button.dock-save { background: #3b82f6; color: #fff; }
-  #dock button.dock-start { background: #39ff14; color: #04100a; box-shadow: 0 0 6px #39ff14, 0 0 16px #39ff14; text-shadow: 0 0 4px rgba(255,255,255,0.6); }
+  #dock button.dock-save { background: #1e8f4e; color: #fff; }
+  #dock button.dock-sec { background: #0a1d13; color: #e6f7ec; border: 1px solid #1f4a33; }
+  #dock button.dock-start { background: #1e8f4e; color: #fff; }
   #dock button:disabled { opacity: 0.4; }
   #dock button.dock-sq { flex: 0 0 56px; width: 56px; min-width: 56px; height: 56px; min-height: 56px; padding: 0; font-size: 24px; }
   /* Esconde o selo "Powered by Netlify" nas duas páginas */
@@ -464,15 +476,21 @@ function clientName(id) {
 }
 
 function mesaOf(clientId) { return mesaDe(db, clientId); }
-function mesaTag(clientId) {
+// Mesa: cor da faixa lateral do cartão e texto discreto
+function mesaCor(clientId) {
   const m = mesaOf(clientId);
-  return m === 'sem-mesa' ? '' : ' <span class="mesa-chip" style="background:' + corDaMesa(m) + '">Mesa ' + esc(m) + '</span>';
+  return m === 'sem-mesa' ? '#2a3a31' : corDaMesa(m);
+}
+function mesaTexto(clientId) {
+  const m = mesaOf(clientId);
+  return m === 'sem-mesa' ? 'Sem mesa' : 'Mesa ' + esc(m);
 }
 // A ordem da fila está em fila.js
 function sortedQueue() { return ordenarFila(db); }
-function cntChip(clientId) {
+// Quantas vezes já cantou, em palavras
+function cantouTexto(clientId) {
   const n = songsSung(clientId);
-  return `<span class="cnt cnt-${faixaMusicas(n)}">${n}x</span>`;
+  return n === 0 ? '<b>nunca cantou</b>' : (n === 1 ? 'cantou 1 vez' : 'cantou ' + n + ' vezes');
 }
 // Quem a barra de baixo controla: quem está no palco ou, se ninguém, o primeiro da fila
 function alvoDock() {
@@ -819,8 +837,8 @@ function renderDock() {
   const cls = s === null ? 'dock-main dock-start' : (s === 'nota' ? 'dock-main dock-save' : 'dock-main');
   dock.innerHTML = `
     <button class="${cls}" data-dock="stage" ${first ? '' : 'disabled'}>${label}</button>
-    <button data-dock="fila">Fila</button>
-    <button data-dock="cadastrar">Cadastrar</button>
+    <button class="dock-sec" data-dock="fila">Fila</button>
+    <button class="dock-sec" data-dock="cadastrar">Cadastrar</button>
     <button class="dock-sq" data-dock="ranking" aria-label="Ranking">🏆</button>`;
 }
 // ABAS: NOME DO CANTOR (cadastro e cadastrados) e FILA (começar / no palco)
@@ -972,8 +990,10 @@ function renderQueue() {
   const el = document.getElementById('queue');
   if (!full.length) { el.innerHTML = '<p class="small">Fila vazia</p>'; renderStagePanel(); return; }
   if (!q.length) { el.innerHTML = '<p class="small">Ninguém encontrado na fila</p>'; renderStagePanel(); return; }
+  const proximo = full.find(x => !x.absent && !(stage && stage.id === x.id));
   el.innerHTML = q.map(it => {
-    const isFirst = first && it.id === first.id;
+    const isFirst = proximo && it.id === proximo.id;
+    const noPalco = stage && stage.id === it.id;
     let stageHtml = '';
     if (!it.absent) {
       const s = stage && stage.id === it.id ? stage.step : null;
@@ -982,14 +1002,15 @@ function renderQueue() {
       } else if (s === 'palco') {
         stageHtml = `<button class="stage-btn palco" data-nota="${it.id}">NO PALCO</button>`;
       } else {
-        stageHtml = `<button class="stage-btn" data-palco="${it.id}">COMEÇAR</button>`;
+        stageHtml = `<button class="stage-btn${isFirst ? '' : ' leve'}" data-palco="${it.id}">COMEÇAR</button>`;
       }
     }
     return `
-    <div class="card ${isFirst ? 'first-up' : ''} ${stage && stage.id === it.id ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}">
-      <div class="item-title">${esc(clientName(it.clientId))} — <span class="queue-code">${esc(it.song)}</span></div>
+    <div class="card marca-mesa ${isFirst ? 'first-up' : ''} ${noPalco ? 'no-palco' : ''} ${it.absent ? 'ausente-card' : ''}" style="border-left-color:${mesaCor(it.clientId)}">
+      ${noPalco ? '<div class="selo selo-palco">NO PALCO</div>' : (isFirst ? '<div class="selo selo-proximo">PRÓXIMO</div>' : '')}
+      <div class="linha-topo"><div class="fc-nome">${esc(clientName(it.clientId))}</div><span class="queue-code">${esc(it.song)}</span></div>
       ${nomeMusicaHtml(it.song)}
-      <div class="info-linha">${cntChip(it.clientId)}${mesaTag(it.clientId)}${it.absent ? '<span class="abs-tag ausente-tag">AUSENTE</span>' : ''}</div>
+      <div class="info-linha">${mesaTexto(it.clientId)} · ${cantouTexto(it.clientId)}${it.absent ? ' · <b>ausente</b>' : ''}</div>
       ${stageHtml}
       <div class="card-foot">
         ${openMenuId === it.id ? `<button class="mini" data-absent="${it.id}">${it.absent ? 'Voltou (presente)' : 'Ausente'}</button><button class="mini" data-editq="${it.id}">Editar código</button><button class="mini" data-delq="${it.id}" style="color:#ff6b6b">Remover da fila</button>` : ''}
@@ -1099,14 +1120,16 @@ function renderClients() {
   el.innerHTML = list.map(c => {
     const isOpen = openClientId === c.id;
     return `
-    <div class="card ${isOpen ? 'open' : ''}">
-      <div class="item-title client-name" data-open="${c.id}">${esc(c.name)}${contagem[c.name.trim().toLowerCase()] > 1 ? ' <span class="repetido-tag">REPETIDO</span>' : ''}${c.mesa ? ' <span class="mesa-chip" style="background:' + corDaMesa(String(c.mesa)) + '">Mesa ' + esc(c.mesa) + '</span>' : ''}</div>
+    <div class="card marca-mesa ${isOpen ? 'open' : ''}" style="border-left-color:${mesaCor(c.id)}">
+      <div class="client-name" data-open="${c.id}"><div class="fc-nome">${esc(c.name)}</div><div class="info-linha">${mesaTexto(c.id)}${contagem[c.name.trim().toLowerCase()] > 1 ? ' · <b>nome repetido</b>' : ''}</div></div>
       ${isOpen ? `<div class="add-row">
         <input id="song-${c.id}" inputmode="numeric" placeholder="Código" autocomplete="off">
         <button data-add="${c.id}">Adicionar à fila</button>
       </div>
       <div id="songname-${c.id}" class="song-nome"></div>
-      <button class="mini" data-editc="${c.id}">Alterar mesa</button> <button class="mini" data-editn="${c.id}">Alterar nome</button> <button class="mini" data-delc="${c.id}" style="color:#ff6b6b">Remover cadastrado</button>` : ''}
+      <details class="mais"><summary>Mais opções</summary>
+        <button class="mini" data-editc="${c.id}">Alterar mesa</button> <button class="mini" data-editn="${c.id}">Alterar nome</button> <button class="mini" data-delc="${c.id}" style="color:#ff6b6b">Remover cadastrado</button>
+      </details>` : ''}
     </div>`;
   }).join('');
   el.querySelectorAll('input[id^="song-"]').forEach(inp => {
