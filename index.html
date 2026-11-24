@@ -168,6 +168,19 @@
   .selo-palco { color: #ffd33d; }
   .stage-btn.leve { min-height: 52px; font-size: 18px; background: transparent; color: #e6f7ec; border: 1px solid #1f4a33; }
   details.mais { margin-top: 10px; }
+  /* Trava de 1 segundo contra toque duplo */
+  body.travado .stage-btn, body.travado .save-btn, body.travado #dock .dock-main { opacity: 0.5; pointer-events: none; }
+  /* Tela dividida (tablet/computador): fila à esquerda, cadastro à direita */
+  #btnDividir { display: none; margin-top: 0; }
+  @media (min-width: 1000px) {
+    #btnDividir { display: inline-flex; align-items: center; }
+    body.dividida #app { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; align-items: start; }
+    body.dividida #app > * { grid-column: 1 / -1; }
+    body.dividida #tabs { display: none; }
+    body.dividida #tabFila { grid-column: 1; grid-row: 10; }
+    body.dividida #tabCantor { grid-column: 2; grid-row: 10; }
+    body.dividida #rankView { grid-row: 11; }
+  }
   button.sem-lista { background: #3a4a42 !important; color: #cfe9d8 !important; }
   .add-row input[id^="qsong-"] { font-size: 96px; line-height: 1.1; text-align: center; min-height: 140px; font-weight: bold; letter-spacing: 2px; }
   .add-musica { margin-top: 10px; padding-top: 10px; border-top: 1px solid #1a3526; }
@@ -182,9 +195,9 @@
   #firstName, #lastName, #mesa { text-align: center; }
   #mesa { -moz-appearance: textfield; appearance: textfield; }
   #mesa::-webkit-inner-spin-button, #mesa::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  #confirmBox .card { background: #ff4fa3; color: #111; border-color: #ff2d95; }
-  #confirmBox button { color: #fff; }
-  #confirmBox .item-title { font-size: 24px; text-align: center; }
+  #confirmBox .card { background: #030a06; color: #e6f7ec; border: 2px solid #1e8f4e; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
+  #confirmBox .item-title { font-size: 22px; line-height: 1.35; text-align: center; color: #fff; }
+  #confirmBox #confirmOk { min-height: 56px; font-size: 18px; }
   #nights summary { font-weight: bold; cursor: pointer; font-size: 16px; }
   #nights .n-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid #0a1d13; font-size: 15px; }
   #app { padding-bottom: 90px; }
@@ -216,7 +229,7 @@
   </div>
 
   <div id="app">
-    <div class="title-row"><h1 class="neon">JANGOKÊ</h1><button class="rank-btn hidden" id="btnBack">← PAINEL</button></div>
+    <div class="title-row"><h1 class="neon">JANGOKÊ</h1><button class="rank-btn hidden" id="btnBack">← PAINEL</button><button class="mini" id="btnDividir">Tela dividida</button></div>
     <p id="status">Carregando...</p>
     <div id="tabs" class="tabs"><button id="tabBtnFila">Fila</button><button id="tabBtnCantor">Cadastro</button></div>
 
@@ -708,6 +721,7 @@ document.getElementById('btnPendingAdd').onclick = () => {
 function doPendingAdd(song) {
   snapshot('entrada de ' + clientName(pendingClientId));
   db.queue.push({ id: uid(), clientId: pendingClientId, song, addedAt: Date.now() });
+  vibrar();
   save();
   pendingClientId = null;
   document.getElementById('pendingSong').value = '';
@@ -794,6 +808,7 @@ function addToQueue(clientId) {
 function doAddToQueue(clientId, song) {
   snapshot('entrada de ' + clientName(clientId));
   db.queue.push({ id: uid(), clientId, song, addedAt: Date.now() });
+  vibrar();
   openClientId = null;
   addMusicaItem = null;
   save();
@@ -889,11 +904,51 @@ function renderDock() {
     <button class="dock-sec" data-dock="cadastrar">Cadastrar</button>
     <button class="dock-sq" data-dock="ranking" aria-label="Ranking">🏆</button>`;
 }
+// TRAVA: depois de COMEÇAR, NO PALCO ou SALVAR NOTA, os botões ficam travados por 1 segundo
+let travadoAte = 0;
+function umToque() {
+  const agora = Date.now();
+  if (agora < travadoAte) return false;
+  travadoAte = agora + 1000;
+  document.body.classList.add('travado');
+  setTimeout(() => document.body.classList.remove('travado'), 1000);
+  return true;
+}
+// VIBRAÇÃO leve ao confirmar (funciona no Android; o iPhone não permite)
+function vibrar() {
+  try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) { /* sem vibração */ }
+}
+// TELA DIVIDIDA: em tela larga, fila e cadastro lado a lado (pode ligar e desligar)
+const telaLarga = window.matchMedia('(min-width: 1000px)');
+let dividida = localStorage.getItem('karaoke-dividida') !== '0';
+function telaDividida() { return dividida && telaLarga.matches; }
+function marcarDividida() {
+  document.body.classList.toggle('dividida', telaDividida());
+  const b = document.getElementById('btnDividir');
+  b.textContent = dividida ? 'Tela dividida: ligada' : 'Tela dividida: desligada';
+  b.classList.toggle('ligado', dividida);
+}
+function aplicarDividida() {
+  marcarDividida();
+  if (document.getElementById('rankView').classList.contains('hidden')) {
+    setTab(localStorage.getItem('karaoke-tab') === 'cantor' ? 'cantor' : 'fila');
+  }
+  render();
+}
+document.getElementById('btnDividir').onclick = () => {
+  dividida = !dividida;
+  localStorage.setItem('karaoke-dividida', dividida ? '1' : '0');
+  aplicarDividida();
+};
+if (telaLarga.addEventListener) telaLarga.addEventListener('change', aplicarDividida);
+marcarDividida();
+
 // ABAS: NOME DO CANTOR (cadastro e cadastrados) e FILA (começar / no palco)
 function setTab(t) {
   localStorage.setItem('karaoke-tab', t);
-  document.getElementById('tabCantor').classList.toggle('hidden', t !== 'cantor');
-  document.getElementById('tabFila').classList.toggle('hidden', t !== 'fila');
+  const ambas = telaDividida();
+  document.getElementById('tabCantor').classList.toggle('hidden', !ambas && t !== 'cantor');
+  document.getElementById('tabFila').classList.toggle('hidden', !ambas && t !== 'fila');
   document.getElementById('tabBtnCantor').classList.toggle('ativa', t === 'cantor');
   document.getElementById('tabBtnFila').classList.toggle('ativa', t === 'fila');
 }
@@ -921,12 +976,13 @@ document.getElementById('dock').onclick = e => {
     const s = stage && stage.id === first.id ? stage.step : null;
     if (s === 'nota') {
       const inp = document.getElementById('stageScore');
-      if (inp && inp.value.trim()) { saveStageScore(first.id); return; }
+      if (inp && inp.value.trim()) { if (umToque()) saveStageScore(first.id); return; }
       // sem nota digitada: leva para o campo da nota na aba FILA
       setTab('fila');
       if (inp) { inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => inp.focus(), 150); }
       return;
     }
+    if (!umToque()) return;
     stage = { id: first.id, step: s === 'palco' ? 'nota' : 'palco' };
     if (!s) { markOnStage(first.id); scanAnim('Lendo digital...'); }
     renderQueue();
@@ -980,11 +1036,11 @@ document.getElementById('queue').onclick = e => {
   const abs = e.target.closest('[data-absent]');
   if (abs) { toggleAbsent(abs.dataset.absent); return; }
   const palco = e.target.closest('[data-palco]');
-  if (palco) { stage = { id: palco.dataset.palco, step: 'palco' }; markOnStage(stage.id); scanAnim('Lendo digital...'); renderQueue(); renderDock(); return; }
+  if (palco) { if (!umToque()) return; stage = { id: palco.dataset.palco, step: 'palco' }; markOnStage(stage.id); scanAnim('Lendo digital...'); renderQueue(); renderDock(); return; }
   const nota = e.target.closest('[data-nota]');
-  if (nota) { stage = { id: nota.dataset.nota, step: 'nota' }; renderQueue(); renderDock(); return; }
+  if (nota) { if (!umToque()) return; stage = { id: nota.dataset.nota, step: 'nota' }; renderQueue(); renderDock(); return; }
   const sv = e.target.closest('[data-save]');
-  if (sv) { saveStageScore(sv.dataset.save); return; }
+  if (sv) { if (umToque()) saveStageScore(sv.dataset.save); return; }
 };
 
 // RANKING: editar nota pede PIN
@@ -1003,6 +1059,7 @@ document.getElementById('btnScore').onclick = () => {
   const item = db.queue.find(x => x.id === currentQueueId);
   if (!item) { currentQueueId = null; renderCurrent(); return; }
   db.performances.push({ id: uid(), clientId: item.clientId, song: item.song, score: s, at: Date.now() });
+  vibrar();
   db.queue = db.queue.filter(x => x.id !== currentQueueId);
   currentQueueId = null;
   save();
@@ -1182,6 +1239,7 @@ function saveStageScore(id) {
   const nm = clientName(item.clientId);
   snapshot('nota de ' + nm);
   db.performances.push({ id: uid(), clientId: item.clientId, song: item.song, score: s, at: Date.now() });
+  vibrar();
   db.queue = db.queue.filter(x => x.id !== id);
   save();
   render();
@@ -1212,7 +1270,7 @@ function renderStagePanel() {
 
 document.getElementById('stagePanel').onclick = e => {
   const sv = e.target.closest('[data-save]');
-  if (sv) { saveStageScore(sv.dataset.save); }
+  if (sv && umToque()) { saveStageScore(sv.dataset.save); }
 };
 
 function renderCurrent() {
