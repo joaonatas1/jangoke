@@ -839,7 +839,7 @@ window.addEventListener('resize', () => fitCodeFont(document.getElementById('pen
 function nomeDaMusica(codigo) {
   if (!codigo) return '';
   if (CATALOGO[codigo]) return CATALOGO[codigo];
-  return Object.keys(CATALOGO).length ? 'Código não encontrado na lista' : '';
+  return 'Código ' + codigo; // sem nome na lista: mostra o próprio código
 }
 // Mostra o nome da música logo abaixo do campo de código
 function mostrarNome(elId, codigo) {
@@ -858,7 +858,7 @@ function confirmarEAdicionar(clientId, song, feito) {
   const quem = clientName(clientId);
   const msg = nome
     ? `Adicionar "${nome}" (${song}) para ${quem}?`
-    : `O código ${song} não está na lista de músicas. Adicionar mesmo assim para ${quem}?`;
+    : `Adicionar o código ${song} para ${quem}? (O nome dessa música não aparece na lista.)`;
   askConfirm(msg, () => {
     const dup = findSongInQueue(song);
     if (dup) { askConfirm(songWarning(song, dup), feito); return; }
